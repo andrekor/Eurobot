@@ -1,3 +1,7 @@
+/*
+	IR Remote benytter interrupt kanal 2, derfor kan vi bare benytte kanal 0 og 1
+*/
+
 #include <Stepper.h>
 #include <IRremote.h>
 
@@ -60,7 +64,7 @@ void setup() {
 	stepCount = 0; 
 	Serial.begin(9600);
 
-	//Setup the interrupts
+	//Setup the interrupt
 	cli(); //Stop interrupts
 	 //set timer0 interrupt at 2kHz
   	TCCR0A = 0;// set entire TCCR2A register to 0
@@ -257,7 +261,7 @@ float angle(int steps) {
 
 ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
 //generates pulse wave of frequency 2kHz/2 = 1kHz (takes two cycles for full wave- toggle high then toggle low)
-  step();
+  step(); //Steps the stepper motor. 
   /*if (toggle0){
   //Serial.println(HIGH);
     digitalWrite(10,HIGH);
