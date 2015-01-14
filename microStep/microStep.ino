@@ -109,7 +109,7 @@ void loop() {
 
 		//delay(30);
 	
-	if (stepCount >= 3200) {
+	if (stepCount >= 1600) {
 		stepCount = 0;
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
