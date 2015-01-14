@@ -260,17 +260,8 @@ float angle(int steps) {
 }
 
 ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
-//generates pulse wave of frequency 2kHz/2 = 1kHz (takes two cycles for full wave- toggle high then toggle low)
-  step(); //Steps the stepper motor. 
-  /*if (toggle0){
-  //Serial.println(HIGH);
-    digitalWrite(10,HIGH);
-    toggle0 = 0;
-  }
-  else{
-  //	Serial.println(LOW);
-    digitalWrite(10,LOW);
-    toggle0 = 1;
-  }
-  */
+/*Steps the stepper motor. 2000 times a second: 
+1600 steps per revolution => 1600/2000 = 0,8 seconds per revolution.
+Maybe we need a it to be a bit faster.  */
+  step(); 
 }
