@@ -8,10 +8,10 @@
 #define MICRO_DELAY 300 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
-#define dirPin 8 //the pin that controls the direction of the steppermotor
-#define stepPin 9 //Output pin for the steppermotor
+#define dirPin 7 //the pin that controls the direction of the steppermotor
+#define stepPin 8 //Output pin for the steppermotor
 
-#define RECV_PIN 11
+#define RECV_PIN 12
 
 #define testPin 3
 
@@ -46,6 +46,7 @@ int cSteps = 0; //steps from start to beacon C
 float alpha;
 float beta;
 float gamma;
+int counter = 0;
 
 boolean towerStop = false;
 
@@ -58,11 +59,12 @@ void setup() {
 	pinMode(testPin, INPUT);
 	pinMode(dirPin, OUTPUT); //output mode to direction pin
 	pinMode(stepPin, OUTPUT); //output mode to step pin
+	pinMode(13, OUTPUT);
 	digitalWrite(dirPin, LOW); //Initialize dir pin
 	digitalWrite(stepPin, LOW); //Initialize step pin
 	
 	stepCount = 0; 
-	Serial.begin(9600);
+	Serial.begin(115200);
 
 	//Setup the interrupt
 	cli(); //Stop interrupts
@@ -84,12 +86,25 @@ void interruptSetup() {
   	// enable timer compare interrupt
   	TIMSK0 |= (1 << OCIE0A);
 
-  	TCCR2A = 0x02;
+
+  	//Set timer1 interrupt at 4000 hz
+  	TCCR1A = 0; //Set entire TCCR2A register to 0
+  	TCCR1B = 0; // same for TCCR2B
+  	TCNT1 = 0; //Initialize counter value to 0
+  	//Set compare match register for 4 KHz increments
+  	OCR1A = 499; // (16*10^6)/(4000*8) -1 (must be < 256)
+  	//Turn on CTC mode 
+  	TCCR1A |= (1 << WGM12);
+  	//Set CS12 for 64 bit prescaler
+  	TCCR1B |= (1 << CS11);
+  	//enable timer compare interrupt
+  	TIMSK1 |= (1 << OCIE2A);
   	sei(); //allow interrupts
 }
 
 int i = 0;
 void loop() {
+	//receiveBeaconSignal();
 	//if (stepCount < oneRevolution + 1) 
 //		digitalWrite(dirPin, LOW);
 //	else
@@ -144,6 +159,7 @@ void rotate() {
 
 
 void step() {
+	//Maybe need to or in the value for the pin
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(MICRO_DELAY);
@@ -155,15 +171,11 @@ from which beacon the signal comes from*/
 void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
   	int value = results.value;
+  	Serial.print("Beacon signal: ");
   	Serial.println(value);
-  //	Serial.print("Signal from beacon");
- //   Serial.println(value);
- //   Serial.print("IR received : ");
     //The beacon towers are coded with a value from 1 -> 3
     if (value > 0 && value < 4) {
-    	towerStop = true;
- 	  //  Serial.print("Signal from beacon");
-    //	Serial.println(value);
+  //  	towerStop = true;
     	switch (value) {
     	    case VALUE_BEACON_A:
     	      aSteps = stepCount;
@@ -183,11 +195,7 @@ void receiveBeaconSignal() {
       //Sende the 0 for beacon 1, 1 for beacon 2, and 2 for beacon 3
       //So that i can get the position directly from the array
   //    readAngleOfBeacon(value-1); 
-    } else {
-    //  Serial.println("No valid signal");
-     // towerStop = false;
-    }
-    //continue to look for more beacons. 
+    }//continue to look for more beacons. 
     irrecv.resume();
   } 
 }
@@ -267,11 +275,48 @@ float angle(int steps) {
 	return steps*(360/oneRevolution);
 }
 
+void decode() {
+	if (irrecv.decode(&results)) {
+  		int value = results.value;
+		if (value > 0 && value < 4) {
+  //  		towerStop = true;
+    		switch (value) {
+    	    case VALUE_BEACON_A:
+    	      	aSteps = stepCount;
+    	      	break;
+    	   	case VALUE_BEACON_B:
+    	      	bSteps = stepCount;
+    	      	break;
+    	    case VALUE_BEACON_C:
+    	    	cSteps = stepCount;
+    	    	break;
+    	    default:
+    	    	break;
+    		}
+  		}
+  	}
+}
+
 ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
 /*Steps the stepper motor. 2000 times a second: 
 1600 steps per revolution => 1600/2000 = 0,8 seconds per revolution.
 Maybe we need a it to be a bit faster.  */ 
-	cli();	//disable interrupts while we are here
-	step(); 
-	sei(); //Allow interrupts
+//	cli();	//disable interrupts while we are here
+	//step(); 
+//	sei(); //Allow interrupts
+//	step();
+	/*Use the same interrupt for the receive 
+	beacon, but with frequence of 2KHz/4=500Hz*/
+	step();
+	if (aSteps > 0)
+		digitalWrite(13, HIGH);
+	//step();
 }
+/* Cannot use timer2 since its alerady used by the 
+IRremote library */
+ISR(TIMER1_COMPA_vect) {
+	//step();
+	//receiveBeaconSignal();
+	decode();
+}
+
