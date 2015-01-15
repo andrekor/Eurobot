@@ -67,6 +67,11 @@ void setup() {
 	//Setup the interrupt
 	cli(); //Stop interrupts
 	 //set timer0 interrupt at 2kHz
+	interruptSetup();
+}
+
+void interruptSetup() {
+	 //set timer0 interrupt at 2kHz
   	TCCR0A = 0;// set entire TCCR2A register to 0
   	TCCR0B = 0;// same for TCCR2B
   	TCNT0  = 0;//initialize counter value to 0
@@ -78,6 +83,8 @@ void setup() {
   	TCCR0B |= (1 << CS01) | (1 << CS00);   
   	// enable timer compare interrupt
   	TIMSK0 |= (1 << OCIE0A);
+
+  	TCCR2A = 0x02;
   	sei(); //allow interrupts
 }
 
@@ -102,19 +109,19 @@ void loop() {
 //	rotate();
 	//if (digitalRead(testPin));
 	//	step();
-	receiveBeaconSignal();
+	//receiveBeaconSignal();
 	//if (!towerStop) {
 //		test();
 //	}
 
 		//delay(30);
 	
-	if (stepCount >= 1600) {
+	/*if (stepCount >= 1600) {
 		stepCount = 0;
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
 	//	delay(5000);
-	}
+	}*/
 }	
 
 void rotate() {
@@ -148,6 +155,7 @@ from which beacon the signal comes from*/
 void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
   	int value = results.value;
+  	Serial.println(value);
   //	Serial.print("Signal from beacon");
  //   Serial.println(value);
  //   Serial.print("IR received : ");
@@ -262,6 +270,8 @@ float angle(int steps) {
 ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
 /*Steps the stepper motor. 2000 times a second: 
 1600 steps per revolution => 1600/2000 = 0,8 seconds per revolution.
-Maybe we need a it to be a bit faster.  */
-  step(); 
+Maybe we need a it to be a bit faster.  */ 
+	cli();	//disable interrupts while we are here
+	step(); 
+	sei(); //Allow interrupts
 }
