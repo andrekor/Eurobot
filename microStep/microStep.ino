@@ -5,7 +5,7 @@
 #include <Stepper.h>
 #include <IRremote.h>
 
-#define MICRO_DELAY 300 //The delay are not used inside the interrupt
+#define MICRO_DELAY 700 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -67,12 +67,12 @@ void setup() {
 	Serial.begin(115200);
 
 	//Setup the interrupt
-	cli(); //Stop interrupts
 	 //set timer0 interrupt at 2kHz
 	interruptSetup();
 }
 
 void interruptSetup() {
+	cli(); //stops interrupts
 	 //set timer0 interrupt at 2kHz
   	TCCR0A = 0;// set entire TCCR2A register to 0
   	TCCR0B = 0;// same for TCCR2B
@@ -91,11 +91,11 @@ void interruptSetup() {
   	TCCR1A = 0; //Set entire TCCR2A register to 0
   	TCCR1B = 0; // same for TCCR2B
   	TCNT1 = 0; //Initialize counter value to 0
-  	//Set compare match register for 4 KHz increments
-  	OCR1A = 499; // (16*10^6)/(4000*8) -1 (must be < 256)
+  	//Set compare match register for 16 KHz increments
+  	OCR1A = 1999; // (16*10^6)/(1000*8) -1 (must be < 65000)
   	//Turn on CTC mode 
-  	TCCR1A |= (1 << WGM12);
-  	//Set CS12 for 64 bit prescaler
+  	TCCR1B |= (1 << WGM12);
+  	//Set CS12 for 8 bit prescaler
   	TCCR1B |= (1 << CS11);
   	//enable timer compare interrupt
   	TIMSK1 |= (1 << OCIE2A);
@@ -104,7 +104,7 @@ void interruptSetup() {
 
 int i = 0;
 void loop() {
-	//receiveBeaconSignal();
+	//step();
 	//if (stepCount < oneRevolution + 1) 
 //		digitalWrite(dirPin, LOW);
 //	else
@@ -130,12 +130,15 @@ void loop() {
 //	}
 
 		//delay(30);
-	
-	/*if (stepCount >= 1600) {
+	if (stepCount <= 1600) {
+		step();
+	//	receiveBeaconSignal();
+	}
+	/*
+	if (stepCount >= 1600) {
 		stepCount = 0;
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
-	//	delay(5000);
 	}*/
 }	
 
@@ -159,11 +162,13 @@ void rotate() {
 
 
 void step() {
+	cli();
 	//Maybe need to or in the value for the pin
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(MICRO_DELAY);
 	stepCount++;
+	sei();
 }
 
 /*Method that receives the IR signals, and detects 
@@ -171,11 +176,8 @@ from which beacon the signal comes from*/
 void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
   	int value = results.value;
-  	Serial.print("Beacon signal: ");
-  	Serial.println(value);
     //The beacon towers are coded with a value from 1 -> 3
     if (value > 0 && value < 4) {
-  //  	towerStop = true;
     	switch (value) {
     	    case VALUE_BEACON_A:
     	      aSteps = stepCount;
@@ -189,9 +191,6 @@ void receiveBeaconSignal() {
     	    default:
     	    	break;
     	}
-
-    	Serial.print("steps to beacon A: ");
-    	Serial.println(aSteps);
       //Sende the 0 for beacon 1, 1 for beacon 2, and 2 for beacon 3
       //So that i can get the position directly from the array
   //    readAngleOfBeacon(value-1); 
@@ -297,6 +296,7 @@ void decode() {
   	}
 }
 
+//Interrupt service routine for Timer0, at 2KHz Used by the arduion
 ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
 /*Steps the stepper motor. 2000 times a second: 
 1600 steps per revolution => 1600/2000 = 0,8 seconds per revolution.
@@ -307,16 +307,15 @@ Maybe we need a it to be a bit faster.  */
 //	step();
 	/*Use the same interrupt for the receive 
 	beacon, but with frequence of 2KHz/4=500Hz*/
-	step();
-	if (aSteps > 0)
-		digitalWrite(13, HIGH);
+	//decode();
 	//step();
 }
+
 /* Cannot use timer2 since its alerady used by the 
 IRremote library */
 ISR(TIMER1_COMPA_vect) {
-	//step();
+	receiveBeaconSignal();
 	//receiveBeaconSignal();
-	decode();
+	//decode();
 }
 
