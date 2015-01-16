@@ -6,7 +6,7 @@ TCCR0B |= (1 << CS02) | (1 << CS00);  // Set CS#2 and CS#0 bits for 1024
 
 #include <IRremote.h>
 
-#define RECV_PIN 11
+#define RECV_PIN 12
 #define INTERRUPT_FREQUENCY 1000 //The frequency of the interrupts in Hz
 
 IRrecv irrecv(RECV_PIN);
@@ -42,24 +42,23 @@ void setup()
   TIMSK0 |= (1 << OCIE0A);
 
 
-//set timer1 interrupt
-  TCCR1A = 0;// set entire TCCR1A register to 0
-  TCCR1B = 0;// same for TCCR1B
-  TCNT1  = 0;//initialize counter value to 0
-  // set compare match register for 2khz increments
-  OCR1A = 124;// = (16*10^6) / (2000*64) - 1 (must be <65536)
-  // turn on CTC mode
-  TCCR1B |= (1 << WGM12);
-  // Set CS12 and CS10 bits for 64 prescaler
-  TCCR1B |= (1 << CS01) | (1 << CS00);  
-  // enable timer compare interrupt
-  TIMSK1 |= (1 << OCIE1A);
+    TCCR1A = 0; //Set entire TCCR2A register to 0
+    TCCR1B = 0; // same for TCCR2B
+    TCNT1 = 0; //Initialize counter value to 0
+    //Set compare match register for 16 KHz increments
+    OCR1A = 1; // (16*10^6)/(1000*8) -1 (must be < 65000)
+    //Turn on CTC mode 
+    TCCR1B |= (1 << WGM12);
+    //Set CS12 for 8 bit prescaler
+    TCCR1B |= (1 << CS12) | (1 << CS10);
+    //enable timer compare interrupt
+    TIMSK1 |= (1 << OCIE2A); 
 
   sei(); //allows interrupts
 }
 
 void loop() {
- 
+
 }
 
 void decode() {
@@ -74,7 +73,7 @@ void decode() {
 }
 
 ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
- decode();
+ //decode();
 //generates pulse wave of frequency 2kHz/2 = 1kHz (takes two cycles for full wave- toggle high then toggle low)
  /*if (toggle0){
   //Serial.println(HIGH);
@@ -89,6 +88,7 @@ ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
 }
 
 ISR(TIMER1_COMPA_vect){//timer1 interrupt 2Hz toggles pin 13 (LED)
+   decode();
 //generates pulse wave of frequency 1Hz/2 = 0.5kHz (takes two cycles for full wave- toggle high then toggle low)
   /*if (toggle1){
   	Serial.println(HIGH);

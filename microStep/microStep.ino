@@ -5,7 +5,7 @@
 #include <Stepper.h>
 #include <IRremote.h>
 
-#define MICRO_DELAY 700 //The delay are not used inside the interrupt
+#define MICRO_DELAY 300 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -39,6 +39,9 @@ float Y_beaconPos[3] = {1, 2, 0};
 
 int stepCount;
 
+int firstAstep = -1; //First step when the receiver recognize beacon A
+int firstBstep = -1; //First step when the receiver recognize beacon B
+int firstCstep = -1; //First step when the receiver recognize beacon C
 int aSteps = 0; //steps from start to beacon A
 int bSteps = 0;  //steps from start to beacon B
 int cSteps = 0; //steps from start to beacon C
@@ -128,18 +131,15 @@ void loop() {
 	//if (!towerStop) {
 //		test();
 //	}
-
+	step();	
+	receiveBeaconSignal();
 		//delay(30);
-	if (stepCount <= 1600) {
-		step();
-	//	receiveBeaconSignal();
-	}
-	/*
+	
 	if (stepCount >= 1600) {
 		stepCount = 0;
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
-	}*/
+	}
 }	
 
 void rotate() {
@@ -162,41 +162,66 @@ void rotate() {
 
 
 void step() {
-	cli();
 	//Maybe need to or in the value for the pin
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(MICRO_DELAY);
 	stepCount++;
-	sei();
 }
 
 /*Method that receives the IR signals, and detects 
 from which beacon the signal comes from*/
 void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
-  	int value = results.value;
+  	int value = results.value; //lagrer IR-koden
+  	int length = results.bits;
+  	Serial.print(value);
+  	Serial.print("  ");
+  	Serial.println(length);
     //The beacon towers are coded with a value from 1 -> 3
     if (value > 0 && value < 4) {
     	switch (value) {
     	    case VALUE_BEACON_A:
-    	      aSteps = stepCount;
+ 				setStep(1);
     	      break;
     	    case VALUE_BEACON_B:
-    	      bSteps = stepCount;
+    	    	setStep(2);
+    	      //bSteps = stepCount;
     	      break;
     	    case VALUE_BEACON_C:
-    	    	cSteps = stepCount;
+    	    	setStep(3);
+    	    	//cSteps = stepCount;
     	    	break;
     	    default:
     	    	break;
     	}
+    	//Serial.println(aSteps);
       //Sende the 0 for beacon 1, 1 for beacon 2, and 2 for beacon 3
       //So that i can get the position directly from the array
   //    readAngleOfBeacon(value-1); 
     }//continue to look for more beacons. 
     irrecv.resume();
   } 
+}
+
+
+/*
+steps will be the last step in the intervall where the tower sees the beacon. 
+*/
+void setStep(int beacon) {
+	if (beacon == 1) {
+		aSteps = stepCount; 
+		if (firstAstep < 0) //first time on this round that we receive a signal from the given beacon
+			firstAstep = aSteps; 
+	} else if (beacon == 2) {
+		bSteps = stepCount;
+		if (firstBstep < 0) 
+			firstBstep = bSteps;
+	} else {
+		cSteps = stepCount;
+		if (firstCstep < 0) 
+			firstCstep = cSteps;
+	}
 }
 
 /*Calculates the angle in degree, when we know the how many steps we have gone*/
@@ -314,8 +339,7 @@ Maybe we need a it to be a bit faster.  */
 /* Cannot use timer2 since its alerady used by the 
 IRremote library */
 ISR(TIMER1_COMPA_vect) {
-	receiveBeaconSignal();
-	//receiveBeaconSignal();
+//	receiveBeaconSignal();
 	//decode();
 }
 
