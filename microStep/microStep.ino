@@ -5,7 +5,7 @@
 #include <Stepper.h>
 #include <IRremote.h>
 
-#define MICRO_DELAY 300 //The delay are not used inside the interrupt
+#define MICRO_DELAY 400 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -49,6 +49,8 @@ int cSteps = 0; //steps from start to beacon C
 float alpha;
 float beta;
 float gamma;
+// (360/1600)
+float resolution = 1;
 int counter = 0;
 
 boolean towerStop = false;
@@ -65,13 +67,15 @@ void setup() {
 	pinMode(13, OUTPUT);
 	digitalWrite(dirPin, LOW); //Initialize dir pin
 	digitalWrite(stepPin, LOW); //Initialize step pin
-	
+
+	resolution = 360.0/oneRevolution;
 	stepCount = 0; 
-	Serial.begin(115200);
+	Serial.begin(9600);
 
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	interruptSetup();
+	testRun();
 }
 
 void interruptSetup() {
@@ -107,6 +111,16 @@ void interruptSetup() {
 
 int i = 0;
 void loop() {
+	/*
+	if (stepCount < oneRevolution + 1) {
+		receiveBeaconSignal();
+		step();
+	} if (stepCount == oneRevolution +1) {
+		Serial.println(angle(aSteps));
+		Serial.println(1000*resolution);
+		stepCount++;
+	}
+*/
 	//step();
 	//if (stepCount < oneRevolution + 1) 
 //		digitalWrite(dirPin, LOW);
@@ -131,6 +145,7 @@ void loop() {
 	//if (!towerStop) {
 //		test();
 //	}
+	/*
 	step();	
 	receiveBeaconSignal();
 		//delay(30);
@@ -140,7 +155,33 @@ void loop() {
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
 	}
+	*/
 }	
+
+void testRun() {
+	while(1) {
+		step(); //steps one step of the stepper 1/1600
+		//checks for beacon signal one time per two steps 2/1600 = 1/800 = 0,45 degrees resolution
+		receiveBeaconSignal();
+		//Breaks after 1 1/2 round
+		if (stepCount == 2400)
+			break;
+	}
+	Serial.print("A ");
+	Serial.print(aSteps);
+	Serial.print(" - ");
+	Serial.println(angle(aSteps));
+	Serial.print("B ");
+	Serial.print(bSteps);
+	Serial.print(" - ");
+	Serial.println(angle(bSteps));
+	Serial.print("C ");
+	Serial.print(cSteps);
+	Serial.print(" - ");
+	Serial.println(angle(cSteps));
+
+}
+
 
 void rotate() {
 	digitalWrite(stepPin, HIGH);
@@ -296,11 +337,16 @@ void angleNegative() {
 }
 
 float angle(int steps) {
-	return steps*(360/oneRevolution);
+	Serial.print(steps);
+	Serial.print(" * 360 /");
+	Serial.println(oneRevolution);
+	return steps*resolution;
 }
 
 void decode() {
 	if (irrecv.decode(&results)) {
+		Serial.println(results.value);
+		Serial.println(results.bits);
   		int value = results.value;
 		if (value > 0 && value < 4) {
   //  		towerStop = true;
@@ -332,7 +378,7 @@ Maybe we need a it to be a bit faster.  */
 //	step();
 	/*Use the same interrupt for the receive 
 	beacon, but with frequence of 2KHz/4=500Hz*/
-	//decode();
+	
 	//step();
 }
 
