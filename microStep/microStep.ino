@@ -158,13 +158,16 @@ void loop() {
 	*/
 }	
 
+/*
+Test program. Turns the tower one and a half round, and calculate the angle of the beacons. 
+*/
 void testRun() {
 	while(1) {
 		step(); //steps one step of the stepper 1/1600
 		//checks for beacon signal one time per two steps 2/1600 = 1/800 = 0,45 degrees resolution
 		receiveBeaconSignal();
 		//Breaks after 1 1/2 round
-		if (stepCount == 2400)
+		if (stepCount == 1601)
 			break;
 	}
 	Serial.print("A ");
