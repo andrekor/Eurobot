@@ -270,26 +270,6 @@ float calcDegree(int steps) {
 	return steps*(oneRevolution/360);
 }
 
-/*Reads the angle from the steppermotor, 
-and puts it in the angle array. Takes in 
-the id of the beacon.*/
-/*
-void readAngleOfBeacon(int beacon) {
-  //The fixed position of the beacon we have found
-  float xi = X_beaconPos[beacon];
-  float yi = Y_beaconPos[beacon];
-
-  //Find the angle of the stepper motor
-  beaconAngle[beacon] = 0; //should be the angle read from the stepper motor
-  //Do this three times to get three equations and three unknown
-  //Use Trust Region Methods
-  Serial.println(sizeof(beaconAngle)/sizeof(float));
-  for (int i = 0; i < (sizeof(beaconAngle)/sizeof(float)); i++) {
-    //thetai = atan2(yi-yr, xi-xr) - thetaR;
-    atan2(yi - yr, xi-xr) - thetaR;
-    }
-}*/
-
 /*
 A->C->B->A
 Starter ved høyeste verdi..
