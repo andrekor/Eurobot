@@ -1,7 +1,6 @@
 /*
 	IR Remote benytter interrupt kanal 2, derfor kan vi bare benytte kanal 0 og 1
 */
-
 #include <Stepper.h>
 #include <IRremote.h>
 
@@ -74,7 +73,7 @@ void setup() {
 
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
-	interruptSetup();
+	//interruptSetup();
 	testRun();
 }
 
@@ -166,7 +165,36 @@ void testRun() {
 		step(); //steps one step of the stepper 1/1600
 		//checks for beacon signal one time per two steps 2/1600 = 1/800 = 0,45 degrees resolution
 		receiveBeaconSignal();
-		//Breaks after 1 1/2 round
+		//Breaks after 1 round
+		if (stepCount == 1601)
+			break;
+	}
+	/*
+	Serial.print("A ");
+	Serial.print(aSteps);
+	Serial.print(" - ");
+	Serial.println(angle(aSteps));
+	Serial.print("B ");
+	Serial.print(bSteps);
+	Serial.print(" - ");
+	Serial.println(angle(bSteps));
+	Serial.print("C ");
+	Serial.print(cSteps);
+	Serial.print(" - ");
+	Serial.println(angle(cSteps));
+	*/
+	Serial.println("Angle on the beacons:");
+	Serial.println(angle(aSteps));
+	Serial.println(angle(bSteps));
+	Serial.println(angle(cSteps));
+	delay(5000);
+	aSteps = 0; bSteps = 0; cSteps = 0;
+	stepCount = 0; //nullstiller stepcount
+	int dir = !digitalRead(dirPin);
+	digitalWrite(dirPin, dir);
+	while(1) {
+		step();
+		receiveBeaconSignal();
 		if (stepCount == 1601)
 			break;
 	}
@@ -181,8 +209,6 @@ void testRun() {
 	Serial.print("C ");
 	Serial.print(cSteps);
 	Serial.print(" - ");
-	Serial.println(angle(cSteps));
-
 }
 
 
@@ -204,7 +230,9 @@ void rotate() {
 	}
 }
 
-
+/*
+To make one step with the stepper motor
+*/
 void step() {
 	//Maybe need to or in the value for the pin
 	digitalWrite(stepPin, HIGH);
@@ -320,9 +348,9 @@ void angleNegative() {
 }
 
 float angle(int steps) {
-	Serial.print(steps);
+	/*Serial.print(steps);
 	Serial.print(" * 360 /");
-	Serial.println(oneRevolution);
+	Serial.println(oneRevolution);*/
 	return steps*resolution;
 }
 
@@ -349,9 +377,9 @@ void decode() {
   		}
   	}
 }
-
+//Commented out the interrupts that disabled the delay function in arduino
 //Interrupt service routine for Timer0, at 2KHz Used by the arduion
-ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
+//ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
 /*Steps the stepper motor. 2000 times a second: 
 1600 steps per revolution => 1600/2000 = 0,8 seconds per revolution.
 Maybe we need a it to be a bit faster.  */ 
@@ -363,12 +391,13 @@ Maybe we need a it to be a bit faster.  */
 	beacon, but with frequence of 2KHz/4=500Hz*/
 	
 	//step();
-}
+//}
 
 /* Cannot use timer2 since its alerady used by the 
 IRremote library */
+/*
 ISR(TIMER1_COMPA_vect) {
 //	receiveBeaconSignal();
 	//decode();
 }
-
+*/
