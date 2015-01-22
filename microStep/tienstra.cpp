@@ -106,6 +106,15 @@ void Tienstra::calculate() {
    Serial.println(ACB);
 */
    //Benytter vinkel til beacon c, kunne hvert fra en av de andre. (burde bare ta en vi har tilgjengelig)
-   float thetaR = atan2(YC-YR, XC-XR) - (M_PI/2); //should be thetaC, and not pi/2
+  // float thetaR = atan2(YC-YR, XC-XR) - (M_PI/2); //should be thetaC, and not pi/2
    //Serial.println(thetaR);
+}
+
+
+/*
+Takes in the position of the robot, the position of the beacon, and the angle of the beacon
+Returns the angle of the robot. 
+*/
+float robotAngle(float yi, float yr, float xi, float xr, float thetai) {
+   return atan2(yi-yr, xi-xr) - thetai;
 }

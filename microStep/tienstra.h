@@ -14,6 +14,7 @@ public:
 	Tienstra();
 	void initialization();
 	void calculate();
+	float robotAngle(float yi, float yr, float xi, float xr, float thetai);
  	float XR;
  	float YR;
  	float theta;

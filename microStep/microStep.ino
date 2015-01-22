@@ -5,7 +5,7 @@
 #include <IRremote.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 400 //The delay are not used inside the interrupt
+#define MICRO_DELAY 250 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -45,12 +45,7 @@ int firstCstep = -1; //First step when the receiver recognize beacon C
 int aSteps = 0; //steps from start to beacon A
 int bSteps = 0;  //steps from start to beacon B
 int cSteps = 0; //steps from start to beacon C
-
-/*float alpha;
-float beta;
-float gamma;*/
-// (360/1600)
-float resolution = 1;
+float resolution;
 int counter = 0;
 
 boolean towerStop = false;
@@ -214,6 +209,8 @@ void testRun() {
 	Serial.print("C ");
 	Serial.print(cSteps);
 	Serial.print(" - ");
+
+	
 }
 
 
