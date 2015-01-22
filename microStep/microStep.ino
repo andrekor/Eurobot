@@ -3,6 +3,7 @@
 */
 #include <Stepper.h>
 #include <IRremote.h>
+#include "tienstra.h"
 
 #define MICRO_DELAY 400 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
@@ -45,21 +46,24 @@ int aSteps = 0; //steps from start to beacon A
 int bSteps = 0;  //steps from start to beacon B
 int cSteps = 0; //steps from start to beacon C
 
-float alpha;
+/*float alpha;
 float beta;
-float gamma;
+float gamma;*/
 // (360/1600)
 float resolution = 1;
 int counter = 0;
 
 boolean towerStop = false;
+Tienstra *t;
 
 void setup() {
-
+	t = new Tienstra();
+	t->initialization();
+//	setVariablesZero();
 	//Setup the ir receiver
 	irrecv.enableIRIn();
 
-	//Setup for steppermotor
+	//Setup for steppermotorprin
 	pinMode(testPin, INPUT);
 	pinMode(dirPin, OUTPUT); //output mode to direction pin
 	pinMode(stepPin, OUTPUT); //output mode to step pin
@@ -77,6 +81,7 @@ void setup() {
 	testRun();
 }
 
+//To setup the interrupts. 
 void interruptSetup() {
 	cli(); //stops interrupts
 	 //set timer0 interrupt at 2kHz
@@ -308,19 +313,19 @@ Starter ved høyeste verdi..
 void anglePositive() {
 	if (aSteps > bSteps && aSteps > cSteps) {
 		//A er størst, altså konfigurasjon null mellom A og C
-		gamma = angle(aSteps-bSteps);
-		alpha = angle(bSteps-cSteps);
-		beta = angle(cSteps+(1600-aSteps));
+		t->gamma = angle(aSteps-bSteps);
+		t->alpha = angle(bSteps-cSteps);
+		t->beta = angle(cSteps+(1600-aSteps));
 	} else if (bSteps > cSteps) {
 		//B er størst, altså null konfigurasjon mellom B og A
-		alpha = angle(bSteps-cSteps);
-		beta = angle(cSteps-aSteps);
-		gamma = angle(aSteps+(1600-bSteps));
+		t->alpha = angle(bSteps-cSteps);
+		t->beta = angle(cSteps-aSteps);
+		t->gamma = angle(aSteps+(1600-bSteps));
 	} else {
 		//C er størst, altså null konfigurasjon mellom C og B
-		beta = angle(cSteps-aSteps);
-		gamma = angle(aSteps-bSteps);
-		alpha = angle(bSteps+(1600-cSteps));
+		t->beta = angle(cSteps-aSteps);
+		t->gamma = angle(aSteps-bSteps);
+		t->alpha = angle(bSteps+(1600-cSteps));
 	}
 }
 
@@ -331,19 +336,19 @@ Starter ved høyeste verdi..
 void angleNegative() {
 	if (aSteps > bSteps && aSteps > cSteps) {
 		//A er størst, altså konfigurasjon null mellom A og B
-		gamma = angle(aSteps-cSteps);
-		alpha = angle(cSteps-bSteps);
-		beta = angle(bSteps+(1600-aSteps));
+		t->gamma = angle(aSteps-cSteps);
+		t->alpha = angle(cSteps-bSteps);
+		t->beta = angle(bSteps+(1600-aSteps));
 	} else if (bSteps > cSteps) {
 		//B er størst, altså null konfigurasjon mellom B og C
-		alpha = angle(bSteps-aSteps);
-		beta = angle(aSteps-cSteps);
-		gamma = angle(cSteps+(1600-bSteps));
+		t->alpha = angle(bSteps-aSteps);
+		t->beta = angle(aSteps-cSteps);
+		t->gamma = angle(cSteps+(1600-bSteps));
 	} else {
 		//C er størst, altså null konfigurasjon mellom C og A
-		beta = angle(cSteps-bSteps);
-		gamma = angle(bSteps-aSteps);
-		alpha = angle(aSteps+(1600-cSteps));
+		t->beta = angle(cSteps-bSteps);
+		t->gamma = angle(bSteps-aSteps);
+		t->alpha = angle(aSteps+(1600-cSteps));
 	}
 }
 
