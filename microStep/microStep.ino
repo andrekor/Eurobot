@@ -48,6 +48,8 @@ int cSteps = 0; //steps from start to beacon C
 float resolution;
 int counter = 0;
 
+int numAngles = 0; //Number of beacons seen that are been calculated, alpha, beta, gamma
+
 boolean towerStop = false;
 Tienstra *t;
 
@@ -209,8 +211,45 @@ void testRun() {
 	Serial.print("C ");
 	Serial.print(cSteps);
 	Serial.print(" - ");
+}
 
-	
+//Run the stepper one round, and read the angles. Then calculate the position
+void testRun2() {
+	while(1) {
+		step();
+		receiveBeaconSignal();
+		if (stepCount == 2400) {
+			break;
+		}
+	}
+	if (digitalRead(dirPin))
+		anglePositive();
+	else 
+		angleNegative();
+
+	numAngles = 0;
+	t->calculate();
+	//Prints the position
+	Serial.print(t->XR);
+	Serial.print(", ");
+	Serial.println(t->YR);
+	//setter retning motsatt
+	digitalWrite(dirPin, !digitalRead(dirPin))
+	while(1) {
+		step();
+		if (stepCount == 0)
+			break;	
+		if (digitalRead(dirPin))
+			anglePositive();
+		else 
+			angleNegative();
+
+		numAngles = 0;
+		t->calculate();
+		Serial.print(t->XR);
+		Serial.print(", ");
+		Serial.println(t->YR):
+	}
 }
 
 
@@ -240,7 +279,10 @@ void step() {
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(MICRO_DELAY);
-	stepCount++;
+	if (digitalRead(dirPin)) //Positiv retning på stepper
+		stepCount++;	
+	else
+		stepCount--;
 }
 
 /*Method that receives the IR signals, and detects 
@@ -285,16 +327,22 @@ steps will be the last step in the intervall where the tower sees the beacon.
 void setStep(int beacon) {
 	if (beacon == 1) {
 		aSteps = stepCount; 
-		if (firstAstep < 0) //first time on this round that we receive a signal from the given beacon
+		if (firstAstep < 0) {//first time on this round that we receive a signal from the given beacon
 			firstAstep = aSteps; 
+			numAngles++; 
+		}
 	} else if (beacon == 2) {
 		bSteps = stepCount;
-		if (firstBstep < 0) 
+		if (firstBstep < 0) {
 			firstBstep = bSteps;
+			numAngles++; 
+		}
 	} else {
 		cSteps = stepCount;
-		if (firstCstep < 0) 
+		if (firstCstep < 0) {
 			firstCstep = cSteps;
+			numAngles++; 	
+		}
 	}
 }
 
