@@ -19,14 +19,6 @@ public:
  	float YR;
  	float theta;
 
-	//Different vectors
- 	float AB;
- 	float AC; 
- 	float BC;
- 	float AR;
- 	float BR;
- 	float CR;
-
 	//Angles we read from the stepper
  	float alpha;
  	float beta;
@@ -40,17 +32,26 @@ public:
  	float CBA;
  	float ACB;
 
-	//cotangents of the angles
+ private:
+ 	//Different vectors
+ 	float AB;
+ 	float AC; 
+ 	float BC;
+ 	float AR;
+ 	float BR;
+ 	float CR;
+
+ 	//Tienstra scalers
+ 	float KA;
+ 	float KB; 
+ 	float KC;
+ 	float K; 
+
+ 	//cotangents of the angles
  	float cot_a;
  	float cot_b;
  	float cot_c;
  	float cot_alpha;
  	float cot_beta;
  	float cot_gamma;
-
-	//Tienstra scalers
- 	float KA;
- 	float KB; 
- 	float KC;
- 	float K; 
 };

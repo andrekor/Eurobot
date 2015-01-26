@@ -112,16 +112,6 @@ void interruptSetup() {
 
 int i = 0;
 void loop() {
-	/*
-	if (stepCount < oneRevolution + 1) {
-		receiveBeaconSignal();
-		step();
-	} if (stepCount == oneRevolution +1) {
-		Serial.println(angle(aSteps));
-		Serial.println(1000*resolution);
-		stepCount++;
-	}
-*/
 	//step();
 	//if (stepCount < oneRevolution + 1) 
 //		digitalWrite(dirPin, LOW);
