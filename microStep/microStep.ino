@@ -5,7 +5,7 @@
 #include <IRremote.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 250 //The delay are not used inside the interrupt
+#define MICRO_DELAY 400 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -42,9 +42,9 @@ int stepCount;
 int firstAstep = -1; //First step when the receiver recognize beacon A
 int firstBstep = -1; //First step when the receiver recognize beacon B
 int firstCstep = -1; //First step when the receiver recognize beacon C
-int aSteps = 0; //steps from start to beacon A
-int bSteps = 0;  //steps from start to beacon B
-int cSteps = 0; //steps from start to beacon C
+int aSteps = -1; //steps from start to beacon A
+int bSteps = -1;  //steps from start to beacon B
+int cSteps = -1; //steps from start to beacon C
 float resolution;
 int counter = 0;
 
@@ -75,7 +75,27 @@ void setup() {
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
-	testRun();
+	//testRun2();
+	testBeacon();
+	//irTest();
+}
+
+void irTest() {
+	while(1)
+		decode();
+}
+
+void hallo() {
+	while(1) {
+	step();
+	if (stepCount >= 1600) {
+		stepCount = 0;
+		int dir = !digitalRead(dirPin);
+		digitalWrite(dirPin, dir);
+	}
+
+}
+
 }
 
 //To setup the interrupts. 
@@ -111,43 +131,7 @@ void interruptSetup() {
 }
 
 int i = 0;
-void loop() {
-	//step();
-	//if (stepCount < oneRevolution + 1) 
-//		digitalWrite(dirPin, LOW);
-//	else
-//		digitalWrite(dirPin, HIGH);
-/*
-	digitalWrite(stepPin, HIGH);
-	digitalWrite(stepPin, LOW);
-	delayMicroseconds(MICRO_DELAY);
-	stepCount++;
-//	Serial.println(stepCount);
-	if (stepCount == 1600) {
-		Serial.println(i++);
-		stepCount = 0;
-	}
-//	if (stepCount < oneRevolution*2) //Reset counter
-*/
-//	rotate();
-	//if (digitalRead(testPin));
-	//	step();
-	//receiveBeaconSignal();
-	//if (!towerStop) {
-//		test();
-//	}
-	/*
-	step();	
-	receiveBeaconSignal();
-		//delay(30);
-	
-	if (stepCount >= 1600) {
-		stepCount = 0;
-		int dir = !digitalRead(dirPin);
-		digitalWrite(dirPin, dir);
-	}
-	*/
-}	
+void loop() {}	
 
 /*
 Test program. Turns the tower one and a half round, and calculate the angle of the beacons. 
@@ -192,43 +176,35 @@ void testRun() {
 	}
 	Serial.print("A ");
 	Serial.print(aSteps);
-	Serial.print(" - ");
+	Serial.print(" last A ");
+	Serial.print(firstAstep);
+	Serial.print(" -> ");
 	Serial.println(angle(aSteps));
 	Serial.print("B ");
 	Serial.print(bSteps);
-	Serial.print(" - ");
+	Serial.print(" last A ");
+	Serial.print(firstAstep);
+	Serial.print(" -> ");
 	Serial.println(angle(bSteps));
 	Serial.print("C ");
 	Serial.print(cSteps);
-	Serial.print(" - ");
+	Serial.print(" last A ");
+	Serial.print(firstAstep);
+	Serial.print(" -> ");
+	Serial.println(angle(cSteps));
+
 }
 
 //Run the stepper one round, and read the angles. Then calculate the position
 void testRun2() {
 	while(1) {
-		step();
-		receiveBeaconSignal();
-		if (stepCount == 2400) {
-			break;
+		while(1) {
+			step();
+			receiveBeaconSignal();
+			if (stepCount == oneRevolution) {
+				break;
+			}
 		}
-	}
-	if (digitalRead(dirPin))
-		anglePositive();
-	else 
-		angleNegative();
-
-	numAngles = 0;
-	t->calculate();
-	//Prints the position
-	Serial.print(t->XR);
-	Serial.print(", ");
-	Serial.println(t->YR);
-	//setter retning motsatt
-	digitalWrite(dirPin, !digitalRead(dirPin))
-	while(1) {
-		step();
-		if (stepCount == 0)
-			break;	
 		if (digitalRead(dirPin))
 			anglePositive();
 		else 
@@ -236,10 +212,92 @@ void testRun2() {
 
 		numAngles = 0;
 		t->calculate();
+		//Prints the position
+		Serial.println("\n Position");
 		Serial.print(t->XR);
 		Serial.print(", ");
-		Serial.println(t->YR):
+		Serial.println(t->YR);
+		Serial.println();
+		Serial.print("gamma : ");
+		Serial.println(t->gamma);
+		Serial.print("beta : ");
+		Serial.println(t->beta);
+		Serial.print("alpha : ");
+		Serial.println(t->alpha);
+		/*
+		Serial.print("Angle to beacon A: ");
+		Serial.println(angle(aSteps));
+		Serial.print("Angle to beacon B: ");
+		Serial.println(angle(bSteps));
+		Serial.print("Angle to beacon C: ");
+		Serial.println(angle(cSteps));
+*/
+		int dir = !digitalRead(dirPin);
+		digitalWrite(dirPin, dir);
+		stepCount = 0;
+
+		delay(5000);
 	}
+}
+
+void testBeacon() {
+	while(1){
+		step();
+		receiveBeaconSignal();
+		//we have got'n a signal from beacon and we break the loop
+		if (aSteps >= 0 || stepCount > 2*oneRevolution) 
+			break;
+	}	
+
+	Serial.print("first A step ");
+	Serial.print(firstAstep);
+	Serial.print("   =>   ");
+	Serial.println(angle(firstAstep));
+
+	Serial.print("A step ");
+	Serial.print(aSteps);
+	Serial.print("   =>   ");
+	Serial.println(angle(aSteps));	
+
+	delay(300);
+
+	while(1){
+		step();
+		receiveBeaconSignal();
+		//we have got'n a signal from beacon and we break the loop
+		if (bSteps >= 0 || stepCount > 2*oneRevolution) 
+			break;
+	}	
+
+	Serial.print("first B step ");
+	Serial.print(firstBstep);
+	Serial.print("   =>   ");
+	Serial.println(angle(firstBstep));
+
+	Serial.print("B step ");
+	Serial.print(bSteps);
+	Serial.print("   =>   ");
+	Serial.println(angle(bSteps));	
+
+	delay(3000);
+
+	while(1){
+		step();
+		receiveBeaconSignal();
+		//we have got'n a signal from beacon and we break the loop
+		if (cSteps >= 0 || stepCount > 2*oneRevolution) 
+			break;
+	}	
+
+	Serial.print("first C step ");
+	Serial.print(firstCstep);
+	Serial.print("   =>   ");
+	Serial.println(angle(firstCstep));
+
+	Serial.print("C step ");
+	Serial.print(cSteps);
+	Serial.print("   =>   ");
+	Serial.println(angle(cSteps));	
 }
 
 
@@ -269,10 +327,12 @@ void step() {
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(MICRO_DELAY);
-	if (digitalRead(dirPin)) //Positiv retning på stepper
+	stepCount++;
+	/*if (digitalRead(dirPin)) //Positiv retning på stepper
 		stepCount++;	
 	else
-		stepCount--;
+		stepCount++;
+		*/
 }
 
 /*Method that receives the IR signals, and detects 
@@ -281,9 +341,9 @@ void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
   	int value = results.value; //lagrer IR-koden
   	int length = results.bits;
-  	Serial.print(value);
-  	Serial.print("  ");
-  	Serial.println(length);
+ // 	Serial.print(value);
+ // 	Serial.print("  ");
+ // 	Serial.println(length);
     //The beacon towers are coded with a value from 1 -> 3
     if (value > 0 && value < 4) {
     	switch (value) {
@@ -316,7 +376,7 @@ steps will be the last step in the intervall where the tower sees the beacon.
 */
 void setStep(int beacon) {
 	if (beacon == 1) {
-		aSteps = stepCount; 
+		aSteps = stepCount%oneRevolution; 
 		if (firstAstep < 0) {//first time on this round that we receive a signal from the given beacon
 			firstAstep = aSteps; 
 			numAngles++; 
@@ -329,7 +389,8 @@ void setStep(int beacon) {
 		}
 	} else {
 		cSteps = stepCount;
-		if (firstCstep < 0) {
+		if (firstCstep < 0) {Serial.print(" last A ");
+	Serial.print(firstAstep);
 			firstCstep = cSteps;
 			numAngles++; 	
 		}
@@ -391,17 +452,19 @@ float angle(int steps) {
 	/*Serial.print(steps);
 	Serial.print(" * 360 /");
 	Serial.println(oneRevolution);*/
-	return steps*resolution;
+	return (steps*resolution);
 }
 
 void decode() {
+	Serial.println("yolo");
 	if (irrecv.decode(&results)) {
-		Serial.println(results.value);
-		Serial.println(results.bits);
+		//Serial.println(results.value);
+		//Serial.println(results.bits);
   		int value = results.value;
 		if (value > 0 && value < 4) {
+			Serial.println(value);
   //  		towerStop = true;
-    		switch (value) {
+    	/*	switch (value) {
     	    case VALUE_BEACON_A:
     	      	aSteps = stepCount;
     	      	break;
@@ -413,7 +476,7 @@ void decode() {
     	    	break;
     	    default:
     	    	break;
-    		}
+    		}*/
   		}
   	}
 }
