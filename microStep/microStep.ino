@@ -5,7 +5,7 @@
 #include <IRremote.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 400 //The delay are not used inside the interrupt
+#define MICRO_DELAY 650 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -13,7 +13,7 @@
 
 #define RECV_PIN 12
 
-#define testPin 3
+#define testPin 11
 
 //Setting ip the IR receiver
 IRrecv irrecv(RECV_PIN);
@@ -46,7 +46,13 @@ int aSteps = -1; //steps from start to beacon A
 int bSteps = -1;  //steps from start to beacon B
 int cSteps = -1; //steps from start to beacon C
 float resolution;
+
+float averageA = 0;
+float averageB = 0;
+float averageC = 0;
+
 int counter = 0;
+int a_counter = 0;
 
 int numAngles = 0; //Number of beacons seen that are been calculated, alpha, beta, gamma
 
@@ -75,10 +81,13 @@ void setup() {
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
-	//testRun2();
-	testBeacon();
+	testRun2();
+	//testBeacon();
+	//hallo();
+	//widthTest();
 	//irTest();
 }
+
 
 void irTest() {
 	while(1)
@@ -87,15 +96,23 @@ void irTest() {
 
 void hallo() {
 	while(1) {
-	step();
-	if (stepCount >= 1600) {
-		stepCount = 0;
-		int dir = !digitalRead(dirPin);
-		digitalWrite(dirPin, dir);
+		while(1) {
+			step();
+			receiveBeaconSignal();
+			if (stepCount > oneRevolution) {
+				stepCount = 0;
+				int d = !digitalRead(dirPin);
+				digitalWrite(dirPin, d);
+				break;
+			}
+		}
+	Serial.print("First a: ");
+	Serial.println(firstAstep);
+	Serial.print("A step: ");
+	Serial.println(aSteps);
+	Serial.println();
+	delay(2000);
 	}
-
-}
-
 }
 
 //To setup the interrupts. 
@@ -131,7 +148,8 @@ void interruptSetup() {
 }
 
 int i = 0;
-void loop() {}	
+void loop() {
+}	
 
 /*
 Test program. Turns the tower one and a half round, and calculate the angle of the beacons. 
@@ -201,10 +219,11 @@ void testRun2() {
 		while(1) {
 			step();
 			receiveBeaconSignal();
-			if (stepCount == oneRevolution) {
+			if (stepCount >= oneRevolution) {
 				break;
 			}
 		}
+		setAverage();
 		if (digitalRead(dirPin))
 			anglePositive();
 		else 
@@ -224,6 +243,23 @@ void testRun2() {
 		Serial.println(t->beta);
 		Serial.print("alpha : ");
 		Serial.println(t->alpha);
+
+		Serial.print("First A step: ");
+		Serial.print(firstAstep);
+		Serial.print(" last step in A: ");
+		Serial.print(aSteps);
+		Serial.print("num a steps");
+		Serial.println(a_counter);
+
+		Serial.print("First B step: ");
+		Serial.print(firstBstep);
+		Serial.print(" last step in B: ");
+		Serial.println(bSteps);
+
+		Serial.print("First C step: ");
+		Serial.print(firstCstep);
+		Serial.print(" last step in C: ");
+		Serial.println(cSteps);
 		/*
 		Serial.print("Angle to beacon A: ");
 		Serial.println(angle(aSteps));
@@ -235,40 +271,105 @@ void testRun2() {
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
 		stepCount = 0;
-
+		zeroCounters();
 		delay(5000);
 	}
 }
 
+float average_angle(float first, float last) {
+	return (first+last)/2;
+}
+
 void testBeacon() {
-	while(1){
-		step();
-		receiveBeaconSignal();
-		//we have got'n a signal from beacon and we break the loop
-		if (aSteps >= 0 || stepCount > 2*oneRevolution) 
-			break;
-	}	
+	while(1) {
+		if (digitalRead(testPin)) {
+		while(firstAstep < 0 && stepCount < oneRevolution){
+			step();
+			receiveBeaconSignal();
+		}	
 
-	Serial.print("first A step ");
-	Serial.print(firstAstep);
-	Serial.print("   =>   ");
-	Serial.println(angle(firstAstep));
+		Serial.print("First A step ");
+		Serial.print(firstAstep);
+		Serial.print("   =>   ");
+		Serial.println(angle(firstAstep));
+		Serial.println();
 
-	Serial.print("A step ");
-	Serial.print(aSteps);
-	Serial.print("   =>   ");
-	Serial.println(angle(aSteps));	
+//		delay(3000);
 
-	delay(300);
+		while(firstBstep < 0 && stepCount < oneRevolution){
+			step();
+			receiveBeaconSignal();
+		}	
 
-	while(1){
-		step();
-		receiveBeaconSignal();
-		//we have got'n a signal from beacon and we break the loop
-		if (bSteps >= 0 || stepCount > 2*oneRevolution) 
-			break;
-	}	
+		Serial.print("First B step ");
+		Serial.print(firstBstep);
+		Serial.print("   =>   ");
+		Serial.println(angle(firstBstep));
+		Serial.println();
 
+	//	delay(3000);
+
+		while(firstCstep < 0 && stepCount < oneRevolution){
+			step();
+			receiveBeaconSignal();
+		}	
+
+		Serial.print("First C step ");
+		Serial.print(firstCstep);
+		Serial.print("   =>   ");
+		Serial.println(angle(firstCstep));
+
+	//	delay(500);
+
+	//Steps to the start position
+		while(stepCount < oneRevolution) 
+			step();
+		zeroCounters();
+		Serial.println("Ready for next test");
+	}
+	int d = !digitalRead(dirPin);
+	digitalWrite(dirPin, d);
+	}
+}
+
+void zeroCounters() {
+	aSteps = -1;
+	bSteps = -1;
+	cSteps = -1;
+	firstAstep = -1;
+	firstBstep = -1;
+	firstCstep = -1;
+	stepCount = -1;
+	a_counter = 0;
+	averageA = 0;
+	averageB = 0;
+	averageC = 0;
+}
+
+void widthTest() {
+	while(1) {
+		if (digitalRead(testPin)){
+			stepCount = 0;
+			int d = !digitalRead(dirPin);
+			digitalWrite(dirPin, d);
+			while (stepCount < oneRevolution) {
+				step();
+				receiveBeaconSignal();
+			}
+
+			Serial.print("first A step ");
+			Serial.print(firstAstep);
+			Serial.print("   =>   ");
+			Serial.println(angle(firstAstep));
+
+			Serial.print("A step ");
+			Serial.print(aSteps);
+			Serial.print("   =>   ");
+			Serial.println(angle(aSteps));
+			Serial.print("number of signals : ");	
+			Serial.println(a_counter);
+			zeroCounters();
+/*
 	Serial.print("first B step ");
 	Serial.print(firstBstep);
 	Serial.print("   =>   ");
@@ -279,16 +380,6 @@ void testBeacon() {
 	Serial.print("   =>   ");
 	Serial.println(angle(bSteps));	
 
-	delay(3000);
-
-	while(1){
-		step();
-		receiveBeaconSignal();
-		//we have got'n a signal from beacon and we break the loop
-		if (cSteps >= 0 || stepCount > 2*oneRevolution) 
-			break;
-	}	
-
 	Serial.print("first C step ");
 	Serial.print(firstCstep);
 	Serial.print("   =>   ");
@@ -298,6 +389,9 @@ void testBeacon() {
 	Serial.print(cSteps);
 	Serial.print("   =>   ");
 	Serial.println(angle(cSteps));	
+	*/
+		}
+	}
 }
 
 
@@ -349,6 +443,7 @@ void receiveBeaconSignal() {
     	switch (value) {
     	    case VALUE_BEACON_A:
  				setStep(1);
+ 				a_counter++;
     	      break;
     	    case VALUE_BEACON_B:
     	    	setStep(2);
@@ -389,8 +484,7 @@ void setStep(int beacon) {
 		}
 	} else {
 		cSteps = stepCount;
-		if (firstCstep < 0) {Serial.print(" last A ");
-	Serial.print(firstAstep);
+		if (firstCstep < 0) {
 			firstCstep = cSteps;
 			numAngles++; 	
 		}
@@ -406,22 +500,37 @@ float calcDegree(int steps) {
 A->C->B->A
 Starter ved høyeste verdi..
 */
+void setAverage() {
+	if (abs(firstAstep-aSteps) < 1000)
+		averageA = average_angle(firstAstep, aSteps);
+	else 
+		averageA = average_angle((1600-max(firstAstep, aSteps)), min(firstAstep, aSteps));
+	if (abs(firstBstep-bSteps) < 1000)
+		averageB = average_angle(firstBstep, bSteps);
+	else 
+		averageB = average_angle((1600-max(firstBstep, bSteps)), min(firstBstep, bSteps));
+	if (abs(firstCstep-cSteps) < 1000)
+		averageC = average_angle(firstCstep, cSteps);
+	else 
+		averageC = average_angle((1600-max(firstCstep, cSteps)), min(firstCstep, cSteps));
+}
+
 void anglePositive() {
-	if (aSteps > bSteps && aSteps > cSteps) {
+	if (aSteps > averageB && aSteps > averageC) {
 		//A er størst, altså konfigurasjon null mellom A og C
-		t->gamma = angle(aSteps-bSteps);
-		t->alpha = angle(bSteps-cSteps);
-		t->beta = angle(cSteps+(1600-aSteps));
-	} else if (bSteps > cSteps) {
+		t->gamma = angle(averageA-averageB);
+		t->alpha = angle(averageB-averageC);
+		t->beta = angle(averageC+(oneRevolution-averageA));
+	} else if (averageB > averageC) {
 		//B er størst, altså null konfigurasjon mellom B og A
-		t->alpha = angle(bSteps-cSteps);
-		t->beta = angle(cSteps-aSteps);
-		t->gamma = angle(aSteps+(1600-bSteps));
+		t->alpha = angle(averageB-averageC);
+		t->beta = angle(averageC-averageA);
+		t->gamma = angle(averageA+(1600-averageB));
 	} else {
 		//C er størst, altså null konfigurasjon mellom C og B
-		t->beta = angle(cSteps-aSteps);
-		t->gamma = angle(aSteps-bSteps);
-		t->alpha = angle(bSteps+(1600-cSteps));
+		t->beta = angle(averageC-averageA);
+		t->gamma = angle(averageA-averageB);
+		t->alpha = angle(averageB+(1600-averageC));
 	}
 }
 
@@ -430,21 +539,21 @@ A->B->C->A
 Starter ved høyeste verdi..
 */
 void angleNegative() {
-	if (aSteps > bSteps && aSteps > cSteps) {
+	if (aSteps > averageB && aSteps > averageC) {
 		//A er størst, altså konfigurasjon null mellom A og B
-		t->gamma = angle(aSteps-cSteps);
-		t->alpha = angle(cSteps-bSteps);
-		t->beta = angle(bSteps+(1600-aSteps));
-	} else if (bSteps > cSteps) {
+		t->gamma = angle(averageA-averageC);
+		t->alpha = angle(averageC-averageB);
+		t->beta = angle(averageB+(1600-aSteps));
+	} else if (averageB > averageC) {
 		//B er størst, altså null konfigurasjon mellom B og C
-		t->alpha = angle(bSteps-aSteps);
-		t->beta = angle(aSteps-cSteps);
-		t->gamma = angle(cSteps+(1600-bSteps));
+		t->alpha = angle(averageB-aSteps);
+		t->beta = angle(aSteps-averageC);
+		t->gamma = angle(averageC+(1600-averageB));
 	} else {
 		//C er størst, altså null konfigurasjon mellom C og A
-		t->beta = angle(cSteps-bSteps);
-		t->gamma = angle(bSteps-aSteps);
-		t->alpha = angle(aSteps+(1600-cSteps));
+		t->beta = angle(averageC-averageB);
+		t->gamma = angle(averageB-aSteps);
+		t->alpha = angle(aSteps+(1600-averageC));
 	}
 }
 
@@ -472,7 +581,7 @@ void decode() {
     	      	bSteps = stepCount;
     	      	break;
     	    case VALUE_BEACON_C:
-    	    	cSteps = stepCount;
+    	    	averageC = stepCount;
     	    	break;
     	    default:
     	    	break;
