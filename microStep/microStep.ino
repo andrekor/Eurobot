@@ -53,6 +53,8 @@ float averageC = 0;
 
 int counter = 0;
 int a_counter = 0;
+int b_counter = 0;
+int c_counter = 0;
 
 int numAngles = 0; //Number of beacons seen that are been calculated, alpha, beta, gamma
 
@@ -248,13 +250,15 @@ void testRun2() {
 		Serial.print(firstAstep);
 		Serial.print(" last step in A: ");
 		Serial.print(aSteps);
-		Serial.print("num a steps");
+		Serial.print(" num a steps: ");
 		Serial.println(a_counter);
 
 		Serial.print("First B step: ");
 		Serial.print(firstBstep);
 		Serial.print(" last step in B: ");
-		Serial.println(bSteps);
+		Serial.print(bSteps);
+		Serial.print(" num steps: ");
+		Serial.println(b_counter);
 
 		Serial.print("First C step: ");
 		Serial.print(firstCstep);
@@ -341,6 +345,8 @@ void zeroCounters() {
 	firstCstep = -1;
 	stepCount = -1;
 	a_counter = 0;
+	b_counter = 0;
+	c_counter = 0;
 	averageA = 0;
 	averageB = 0;
 	averageC = 0;
@@ -447,10 +453,12 @@ void receiveBeaconSignal() {
     	      break;
     	    case VALUE_BEACON_B:
     	    	setStep(2);
+    	    	b_counter++;
     	      //bSteps = stepCount;
     	      break;
     	    case VALUE_BEACON_C:
     	    	setStep(3);
+    	    	c_counter++;
     	    	//cSteps = stepCount;
     	    	break;
     	    default:
