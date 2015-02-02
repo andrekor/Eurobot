@@ -66,6 +66,10 @@ void decode() {
     //Serial.println(results.bits); //The length of the signa
     //Serial.println(results.value);
     int value = results.value;
+    int bit = results.bits;
+    Serial.print(value);
+    Serial.print(", ");
+    Serial.println(bit);
    if (value >= 0 && value <= 3)
     Serial.println(value);
     //Serial.println(results.value);

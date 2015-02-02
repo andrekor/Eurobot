@@ -1,12 +1,12 @@
 #include <math.h>
 //X og Y koordinater for beacons
 #define XA 0
-#define YA 100
+#define YA 35
 
-#define XB 300
-#define YB 200
+#define XB 140
+#define YB 70
 
-#define XC 300
+#define XC 140
 #define YC 0
 
 class Tienstra {
@@ -28,18 +28,20 @@ public:
  	float angleA;
  	float angleB;
  	float angleC;
- 	float BAC;
- 	float CBA;
- 	float ACB;
 
  private:
- 	//Different vectors
+ 	//Different vectors only 
  	float AB;
  	float AC; 
  	float BC;
  	float AR;
  	float BR;
  	float CR;
+
+ 	//verctor between beacons
+ 	float BAC;
+ 	float CBA;
+ 	float ACB;
 
  	//Tienstra scalers
  	float KA;

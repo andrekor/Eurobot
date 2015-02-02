@@ -5,7 +5,7 @@
 #include <IRremote.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 650 //The delay are not used inside the interrupt
+#define MICRO_DELAY 500 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -219,8 +219,8 @@ void testRun() {
 void testRun2() {
 	while(1) {
 		while(1) {
-			step();
 			receiveBeaconSignal();
+			step();
 			if (stepCount >= oneRevolution) {
 				break;
 			}
@@ -231,10 +231,12 @@ void testRun2() {
 		else 
 			angleNegative();
 
-		numAngles = 0;
-		t->calculate();
+		if (numAngles == 3) {
+			Serial.println("\n Calculateing the position: ");
+			t->calculate();
+		}
 		//Prints the position
-		Serial.println("\n Position");
+		Serial.println("Position");
 		Serial.print(t->XR);
 		Serial.print(", ");
 		Serial.println(t->YR);
@@ -250,6 +252,8 @@ void testRun2() {
 		Serial.print(firstAstep);
 		Serial.print(" last step in A: ");
 		Serial.print(aSteps);
+		Serial.print(" angle from start pos (average: ");
+		Serial.print(angle(averageA));
 		Serial.print(" num a steps: ");
 		Serial.println(a_counter);
 
@@ -257,13 +261,19 @@ void testRun2() {
 		Serial.print(firstBstep);
 		Serial.print(" last step in B: ");
 		Serial.print(bSteps);
+		Serial.print(" angle from start pos (average: ");
+		Serial.print(angle(averageB));
 		Serial.print(" num steps: ");
 		Serial.println(b_counter);
 
 		Serial.print("First C step: ");
 		Serial.print(firstCstep);
 		Serial.print(" last step in C: ");
-		Serial.println(cSteps);
+		Serial.print(cSteps);
+		Serial.print(" angle from start pos (average: ");
+		Serial.print(angle(averageC));
+		Serial.print(" num steps: ");
+		Serial.println(c_counter);
 		/*
 		Serial.print("Angle to beacon A: ");
 		Serial.println(angle(aSteps));
@@ -276,7 +286,7 @@ void testRun2() {
 		digitalWrite(dirPin, dir);
 		stepCount = 0;
 		zeroCounters();
-		delay(5000);
+		delay(3500);
 	}
 }
 
@@ -350,6 +360,7 @@ void zeroCounters() {
 	averageA = 0;
 	averageB = 0;
 	averageC = 0;
+	numAngles = 0;
 }
 
 void widthTest() {
@@ -524,21 +535,22 @@ void setAverage() {
 }
 
 void anglePositive() {
-	if (aSteps > averageB && aSteps > averageC) {
+	if (averageA > averageB && averageA > averageC) {
 		//A er størst, altså konfigurasjon null mellom A og C
-		t->gamma = angle(averageA-averageB);
-		t->alpha = angle(averageB-averageC);
-		t->beta = angle(averageC+(oneRevolution-averageA));
+		t->alpha = angle(averageC-averageB);
+		t->beta = angle(averageA-averageC);
+		t->gamma = angle(averageB+(oneRevolution-averageA));
 	} else if (averageB > averageC) {
 		//B er størst, altså null konfigurasjon mellom B og A
-		t->alpha = angle(averageB-averageC);
-		t->beta = angle(averageC-averageA);
-		t->gamma = angle(averageA+(1600-averageB));
+		t->beta = angle(averageA-averageC);
+		t->gamma = angle(averageB-averageC);
+		t->alpha = angle(averageC+(oneRevolution-averageB))
+		//t->gamma = angle(averageA+(1600-averageB));
 	} else {
 		//C er størst, altså null konfigurasjon mellom C og B
-		t->beta = angle(averageC-averageA);
-		t->gamma = angle(averageA-averageB);
-		t->alpha = angle(averageB+(1600-averageC));
+		t->gamma = angle(averageB-averageA);
+		t->alpha = angle(averageC-averageB);
+		t->beta = angle(averageA+(oneRevolution-averageC));
 	}
 }
 
@@ -548,20 +560,20 @@ Starter ved høyeste verdi..
 */
 void angleNegative() {
 	if (aSteps > averageB && aSteps > averageC) {
-		//A er størst, altså konfigurasjon null mellom A og B
-		t->gamma = angle(averageA-averageC);
-		t->alpha = angle(averageC-averageB);
-		t->beta = angle(averageB+(1600-aSteps));
+		//A er størst, altså konfigurasjon null mellom A og C
+		t->alpha = angle(averageB-averageC);
+		t->gamma = angle(averageA-averageB);
+		t->beta = angle(averageC+(oneRevolution-averageA));
 	} else if (averageB > averageC) {
-		//B er størst, altså null konfigurasjon mellom B og C
-		t->alpha = angle(averageB-aSteps);
-		t->beta = angle(aSteps-averageC);
-		t->gamma = angle(averageC+(1600-averageB));
+		//B er størst, altså null konfigurasjon mellom B og A
+		t->beta = angle(averageC-averageA);	
+		t->alpha = angle(averageB-averageC);
+		t->gamma = angle(averageA+(oneRevolution-averageB));
 	} else {
-		//C er størst, altså null konfigurasjon mellom C og A
-		t->beta = angle(averageC-averageB);
-		t->gamma = angle(averageB-aSteps);
-		t->alpha = angle(aSteps+(1600-averageC));
+		//C er størst, altså null konfigurasjon mellom C og B
+		t->gamma = angel(averageA-averageB);
+		t->beta = angle(averageC-averageA);
+		t->alpha = angle(averageB+(oneRevolution-averageC));+
 	}
 }
 
