@@ -5,7 +5,7 @@
 #include <IRremote.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 500 //The delay are not used inside the interrupt
+#define MICRO_DELAY 350 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that controls the direction of the steppermotor
@@ -15,27 +15,13 @@
 
 #define testPin 11
 
-//Setting ip the IR receiver
-IRrecv irrecv(RECV_PIN);
-decode_results results;
-
-#define X_BEACON1 0  //0 m i X retning
-#define Y_BEACON1 1  // 1 m i y retning
-
-//Defines for beacon2
-#define X_BEACON2 3  //0 m i X retning
-#define Y_BEACON2 2  // 1 m i y retning
-
-//Defines for beacon3
-#define X_BEACON3 3  //0 m i X retning
-#define Y_BEACON3 0  // 1 m i y retning
-
 #define VALUE_BEACON_A 0x0001 
 #define VALUE_BEACON_B 0x0002
 #define VALUE_BEACON_C 0x0003
 
-float X_beaconPos[3] = {0, 3, 3};
-float Y_beaconPos[3] = {1, 2, 0};
+//Setting ip the IR receiver
+IRrecv irrecv(RECV_PIN);
+decode_results results;
 
 int stepCount;
 
@@ -227,12 +213,13 @@ void testRun2() {
 		}
 		setAverage();
 		if (digitalRead(dirPin))
-			anglePositive();
-		else 
 			angleNegative();
+		else 
+			anglePositive();
 
 		if (numAngles == 3) {
 			Serial.println("\n Calculateing the position: ");
+
 			t->calculate();
 		}
 		//Prints the position
@@ -250,10 +237,16 @@ void testRun2() {
 
 		Serial.print("First A step: ");
 		Serial.print(firstAstep);
+		Serial.print(" angle first: ");
+		Serial.print(angle(firstAstep));
 		Serial.print(" last step in A: ");
 		Serial.print(aSteps);
-		Serial.print(" angle from start pos (average: ");
-		Serial.print(angle(averageA));
+		Serial.print(" angle last ");
+		Serial.println(angle(aSteps));
+		Serial.print(" Average Step A ");
+		Serial.print(averageA);
+		Serial.print(" * Angle from start pos average: ");
+		Serial.println(angle(averageA));
 		Serial.print(" num a steps: ");
 		Serial.println(a_counter);
 
@@ -274,6 +267,7 @@ void testRun2() {
 		Serial.print(angle(averageC));
 		Serial.print(" num steps: ");
 		Serial.println(c_counter);
+
 		/*
 		Serial.print("Angle to beacon A: ");
 		Serial.println(angle(aSteps));
@@ -386,27 +380,6 @@ void widthTest() {
 			Serial.print("number of signals : ");	
 			Serial.println(a_counter);
 			zeroCounters();
-/*
-	Serial.print("first B step ");
-	Serial.print(firstBstep);
-	Serial.print("   =>   ");
-	Serial.println(angle(firstBstep));
-
-	Serial.print("B step ");
-	Serial.print(bSteps);
-	Serial.print("   =>   ");
-	Serial.println(angle(bSteps));	
-
-	Serial.print("first C step ");
-	Serial.print(firstCstep);
-	Serial.print("   =>   ");
-	Serial.println(angle(firstCstep));
-
-	Serial.print("C step ");
-	Serial.print(cSteps);
-	Serial.print("   =>   ");
-	Serial.println(angle(cSteps));	
-	*/
 		}
 	}
 }
@@ -439,11 +412,6 @@ void step() {
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(MICRO_DELAY);
 	stepCount++;
-	/*if (digitalRead(dirPin)) //Positiv retning på stepper
-		stepCount++;	
-	else
-		stepCount++;
-		*/
 }
 
 /*Method that receives the IR signals, and detects 
@@ -523,15 +491,15 @@ void setAverage() {
 	if (abs(firstAstep-aSteps) < 1000)
 		averageA = average_angle(firstAstep, aSteps);
 	else 
-		averageA = average_angle((1600-max(firstAstep, aSteps)), min(firstAstep, aSteps));
+		averageA = average_angle((oneRevolution-max(firstAstep, aSteps)), min(firstAstep, aSteps));
 	if (abs(firstBstep-bSteps) < 1000)
 		averageB = average_angle(firstBstep, bSteps);
 	else 
-		averageB = average_angle((1600-max(firstBstep, bSteps)), min(firstBstep, bSteps));
+		averageB = average_angle((oneRevolution-max(firstBstep, bSteps)), min(firstBstep, bSteps));
 	if (abs(firstCstep-cSteps) < 1000)
 		averageC = average_angle(firstCstep, cSteps);
 	else 
-		averageC = average_angle((1600-max(firstCstep, cSteps)), min(firstCstep, cSteps));
+		averageC = average_angle((oneRevolution-max(firstCstep, cSteps)), min(firstCstep, cSteps));
 }
 
 void anglePositive() {
@@ -544,7 +512,7 @@ void anglePositive() {
 		//B er størst, altså null konfigurasjon mellom B og A
 		t->beta = angle(averageA-averageC);
 		t->gamma = angle(averageB-averageC);
-		t->alpha = angle(averageC+(oneRevolution-averageB))
+		t->alpha = angle(averageC+(oneRevolution-averageB));
 		//t->gamma = angle(averageA+(1600-averageB));
 	} else {
 		//C er størst, altså null konfigurasjon mellom C og B
@@ -571,9 +539,9 @@ void angleNegative() {
 		t->gamma = angle(averageA+(oneRevolution-averageB));
 	} else {
 		//C er størst, altså null konfigurasjon mellom C og B
-		t->gamma = angel(averageA-averageB);
+		t->gamma = angle(averageA-averageB);
 		t->beta = angle(averageC-averageA);
-		t->alpha = angle(averageB+(oneRevolution-averageC));+
+		t->alpha = angle(averageB+(oneRevolution-averageC));
 	}
 }
 
@@ -585,7 +553,6 @@ float angle(int steps) {
 }
 
 void decode() {
-	Serial.println("yolo");
 	if (irrecv.decode(&results)) {
 		//Serial.println(results.value);
 		//Serial.println(results.bits);
