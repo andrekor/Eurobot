@@ -5,7 +5,7 @@
 #include <IRremote.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 300 //The delay are not used inside the interrupt
+#define MICRO_DELAY 400 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
@@ -22,6 +22,8 @@
 //Setting ip the IR receiver
 IRrecv irrecv(RECV_PIN);
 decode_results results;
+
+int rCnt;
 
 int stepCount;
 
@@ -44,6 +46,8 @@ int c_counter = 0;
 
 int numAngles = 0; //Number of beacons seen that are been calculated, alpha, beta, gamma
 
+unsigned long time;
+
 boolean towerStop = false;
 Tienstra *t;
 
@@ -64,6 +68,7 @@ void setup() {
 
 	resolution = 360.0/oneRevolution;
 	stepCount = 0; 
+	time = micros();
 	Serial.begin(9600);
 
 	//Setup the interrupt
@@ -200,7 +205,6 @@ void testRun() {
 	Serial.println(angle(cSteps));
 
 }
-
 //Run the stepper one round, and read the angles. Then calculate the position
 void testRun2() {
 	while(1) {
@@ -235,38 +239,13 @@ void testRun2() {
 		Serial.print("alpha : ");
 		Serial.println(t->alpha);
 
-		Serial.print("First A step: ");
-		Serial.print(firstAstep);
-		Serial.print(" angle first: ");
-		Serial.print(angle(firstAstep));
-		Serial.print(" last step in A: ");
-		Serial.print(aSteps);
-		Serial.print(" angle last ");
-		Serial.println(angle(aSteps));
-		Serial.print(" Average Step A ");
-		Serial.print(averageA);
-		Serial.print(" * Angle from start pos average: ");
-		Serial.println(angle(averageA));
-		Serial.print(" num a steps: ");
-		Serial.println(a_counter);
+		Serial.print("A: ");		
+		printStuff(firstAstep, averageA, aSteps, a_counter);
+		Serial.print("B: ");		
+		printStuff(firstBstep, averageB, bSteps, b_counter);
+		Serial.print("C: ");		
+		printStuff(firstCstep, averageC, cSteps, c_counter);
 
-		Serial.print("First B step: ");
-		Serial.print(firstBstep);
-		Serial.print(" last step in B: ");
-		Serial.print(bSteps);
-		Serial.print(" angle from start pos (average: ");
-		Serial.print(angle(averageB));
-		Serial.print(" num steps: ");
-		Serial.println(b_counter);
-
-		Serial.print("First C step: ");
-		Serial.print(firstCstep);
-		Serial.print(" last step in C: ");
-		Serial.print(cSteps);
-		Serial.print(" angle from start pos (average: ");
-		Serial.print(angle(averageC));
-		Serial.print(" num steps: ");
-		Serial.println(c_counter);
 
 		/*
 		Serial.print("Angle to beacon A: ");
@@ -282,6 +261,23 @@ void testRun2() {
 		zeroCounters();
 		delay(3500);
 	}
+}
+
+void printStuff(int first, int average, int last, int num)  {
+	Serial.print("[");
+	Serial.print(first);
+	Serial.print(", ");
+	Serial.print(average);
+	Serial.print("," );
+	Serial.print(last);
+	Serial.print("]   [");
+	Serial.print(angle(first));
+	Serial.print(", ");
+	Serial.print(angle(average));
+	Serial.print("," );
+	Serial.print(angle(last));
+	Serial.print("]   ");
+	Serial.println(num);
 }
 
 float average_angle(float first, float last) {
@@ -355,6 +351,7 @@ void zeroCounters() {
 	averageB = 0;
 	averageC = 0;
 	numAngles = 0;
+	rCnt = 0;
 }
 
 void widthTest() {
@@ -367,17 +364,9 @@ void widthTest() {
 				step();
 				receiveBeaconSignal();
 			}
-
-			Serial.print("first A step ");
-			Serial.print(firstAstep);
-			Serial.print("   =>   ");
-			Serial.println(angle(firstAstep));
-
-			Serial.print("A step ");
-			Serial.print(aSteps);
-			Serial.print("   =>   ");
-			Serial.println(angle(aSteps));
-			Serial.print("number of signals : ");	
+			
+			Serial.print(angle(firstAstep-aSteps));
+			Serial.print(" , ");
 			Serial.println(a_counter);
 			zeroCounters();
 		}
@@ -408,19 +397,40 @@ To make one step with the stepper motor
 */
 void step() {
 	//Maybe need to or in the value for the pin
-	digitalWrite(stepPin, HIGH);
-	digitalWrite(stepPin, LOW);
-	delayMicroseconds(MICRO_DELAY);
-	stepCount++;
+	//if ((micros() - time) > MICRO_DELAY) {
+		time = micros();
+		digitalWrite(stepPin, HIGH);
+		digitalWrite(stepPin, LOW);
+		stepCount++;
+		delayMicroseconds(MICRO_DELAY);
+	//}
+}
+
+void decode() {
+  if (irrecv.decode(&results)) {
+    //Serial.println(results.bits); //The length of the signa
+    //Serial.println(results.value);
+    int value = results.value;
+    int bit = results.bits;
+    Serial.print(value);
+    Serial.print(", ");
+    Serial.println(bit);
+   if (value >= 0 && value <= 3)
+    Serial.println(value);
+    //Serial.println(results.value);
+   // Serial.println(results.value, HEX);
+    irrecv.resume(); // Receive the next value
+  }
 }
 
 /*Method that receives the IR signals, and detects 
 from which beacon the signal comes from*/
 void receiveBeaconSignal() {
+	rCnt++;
   if (irrecv.decode(&results)) {
   	int value = results.value; //lagrer IR-koden
   	int length = results.bits;
-  	Serial.println(value);
+
  // 	Serial.print(value);
  // 	Serial.print("  ");
  // 	Serial.println(length);
@@ -443,9 +453,9 @@ void receiveBeaconSignal() {
         default:
         	break;
     	}
+    	irrecv.resume();
     } 
     //continue to look for more beacons. 
-	irrecv.resume();
 } 
 
 
@@ -548,30 +558,6 @@ float angle(int steps) {
 	return (steps*resolution);
 }
 
-void decode() {
-	if (irrecv.decode(&results)) {
-		//Serial.println(results.value);
-		//Serial.println(results.bits);
-  		int value = results.value;
-		if (value > 0 && value < 4) {
-			Serial.println(value);
-  //  		towerStop = true;
-    	/*	switch (value) {
-    	    case VALUE_BEACON_A:
-    	      	aSteps = stepCount;
-    	      	break;
-    	   	case VALUE_BEACON_B:
-    	      	bSteps = stepCount;
-    	      	break;
-    	    case VALUE_BEACON_C:
-    	    	averageC = stepCount;
-    	    	break;
-    	    default:
-    	    	break;
-    		}*/
-  		}
-  	}
-}
 //Commented out the interrupts that disabled the delay function in arduino
 //Interrupt service routine for Timer0, at 2KHz Used by the arduion
 //ISR(TIMER0_COMPA_vect){//timer0 interrupt 2kHz toggles pin 8
