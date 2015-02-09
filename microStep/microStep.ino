@@ -5,19 +5,19 @@
 #include <IRremote.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 350 //The delay are not used inside the interrupt
+#define MICRO_DELAY 300 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
-#define dirPin 7 //the pin that controls the direction of the steppermotor
+#define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
 #define stepPin 8 //Output pin for the steppermotor
 
 #define RECV_PIN 12
 
 #define testPin 11
 
-#define VALUE_BEACON_A 0x0001 
-#define VALUE_BEACON_B 0x0002
-#define VALUE_BEACON_C 0x0003
+#define VALUE_BEACON_A 32480
+#define VALUE_BEACON_B 338
+#define VALUE_BEACON_C 339
 
 //Setting ip the IR receiver
 IRrecv irrecv(RECV_PIN);
@@ -69,10 +69,10 @@ void setup() {
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
-	testRun2();
+	//testRun2();
 	//testBeacon();
 	//hallo();
-	//widthTest();
+	widthTest();
 	//irTest();
 }
 
@@ -420,37 +420,33 @@ void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
   	int value = results.value; //lagrer IR-koden
   	int length = results.bits;
+  	Serial.println(value);
  // 	Serial.print(value);
  // 	Serial.print("  ");
  // 	Serial.println(length);
-    //The beacon towers are coded with a value from 1 -> 3
-    if (value > 0 && value < 4) {
-    	switch (value) {
-    	    case VALUE_BEACON_A:
- 				setStep(1);
- 				a_counter++;
-    	      break;
-    	    case VALUE_BEACON_B:
-    	    	setStep(2);
-    	    	b_counter++;
-    	      //bSteps = stepCount;
-    	      break;
-    	    case VALUE_BEACON_C:
-    	    	setStep(3);
-    	    	c_counter++;
-    	    	//cSteps = stepCount;
-    	    	break;
-    	    default:
-    	    	break;
+    //The beacon towers are coded with a value from 336, 338, 339
+    switch (value) {
+        case VALUE_BEACON_A:
+ 			setStep(1);
+ 			a_counter++;
+          break;
+        case VALUE_BEACON_B:
+        	setStep(2);
+        	b_counter++;
+          //bSteps = stepCount;
+          break;
+        case VALUE_BEACON_C:
+        	setStep(3);
+        	c_counter++;
+        	//cSteps = stepCount;
+        	break;
+        default:
+        	break;
     	}
-    	//Serial.println(aSteps);
-      //Sende the 0 for beacon 1, 1 for beacon 2, and 2 for beacon 3
-      //So that i can get the position directly from the array
-  //    readAngleOfBeacon(value-1); 
-    }//continue to look for more beacons. 
-    irrecv.resume();
-  } 
-}
+    } 
+    //continue to look for more beacons. 
+	irrecv.resume();
+} 
 
 
 /*

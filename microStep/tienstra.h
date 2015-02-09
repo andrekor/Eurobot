@@ -1,12 +1,12 @@
 #include <math.h>
 //X og Y koordinater for beacons
 #define XA 0
-#define YA 100
+#define YA 50
 
-#define XB 300
-#define YB 200
+#define XB 170
+#define YB 100
 
-#define XC 300
+#define XC 170
 #define YC 0
 
 class Tienstra {
