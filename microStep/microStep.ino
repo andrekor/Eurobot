@@ -52,31 +52,24 @@ boolean towerStop = false;
 Tienstra *t;
 
 /*Creates linkedlist that holds all the angles of for each of the beacons per round. For testing*/
-struct beaconAngleA {
-  float angle;
-  beaconAngleA *next;
-}typedef LIST_A;
+typedef struct beaconAngle {
+  float step;
+  beaconAngle *next;
+} LIST;
 
-struct beaconAngleB {
-  float angle;
-  beaconAngleB *next;
-}typedef LIST_B;
-
-struct beaconAngleC {
-  float angle;
-  beaconAngleC *next;
-}typedef LIST_C;
+LIST *stepA;
+LIST *stepB;
+LIST *stepC;
 
 void setup() {
 	//The roots of linkedlists, all 	
-	LIST_A *stepA; = (LIST_A *)malloc(sizeof(LIST_A));
-	LIST_B *stepB; = (LIST_B *)malloc(sizeof(LIST_B));
-	LIST_C *stepC; = (LIST_C *)malloc(sizeof(LIST_C));
+	stepA = (LIST *)malloc(sizeof(LIST));
+	stepB = (LIST *)malloc(sizeof(LIST));
+	stepC = (LIST *)malloc(sizeof(LIST));
 
 
 	t = new Tienstra();
 	t->initialization();
-//	setVariablesZero();
 	//Setup the ir receiver
 	irrecv.enableIRIn();
 
@@ -489,6 +482,19 @@ void receiveBeaconSignal() {
     //continue to look for more beacons. 
 } 
 
+LIST addInList(LIST *l, float steps) {
+	if (l == NULL) {
+		l = (LIST *)malloc(sizeof(LIST));
+		l->step = steps;
+		l->next = NULL;
+	} else {
+		LIST *tmp = l;
+		l = (LIST *)malloc(sizeof(LIST));
+		l->step = steps;
+		l->next=tmp;
+	}
+	return *l;
+}
 
 /*
 steps will be the last step in the intervall where the tower sees the beacon. 
@@ -496,29 +502,21 @@ steps will be the last step in the intervall where the tower sees the beacon.
 void setStep(int beacon) {
 	if (beacon == 1) {
 		//Adds the steps in a Linked List
-		if (stepA == NULL) {
-			 stepA = (LIST_A *)malloc(sizeof(LIST_A));
-			 stepA->next = NULL;
-			 stepA->step = aSteps;
-		} else {
-			LIST_A *tmp = stepA;
-			stepA =  = (LIST_A *)malloc(sizeof(LIST_A));
-			stepA->step = aSteps;
-			stepA->next = tmp;
-		}
-
+		//stepA = addInList(stepA, aSteps);
 		aSteps = stepCount%oneRevolution; 
 		if (firstAstep < 0) {//first time on this round that we receive a signal from the given beacon
 			firstAstep = aSteps; 
 			numAngles++; 
 		}
 	} else if (beacon == 2) {
+		//stepB = addInList(stepB, aSteps);
 		bSteps = stepCount;
 		if (firstBstep < 0) {
 			firstBstep = bSteps;
 			numAngles++; 
 		}
 	} else {
+	//	stepC = addInList(stepC, aSteps);
 		cSteps = stepCount;
 		if (firstCstep < 0) {
 			firstCstep = cSteps;
