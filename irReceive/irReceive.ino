@@ -70,8 +70,6 @@ void decode() {
     Serial.print(value);
     Serial.print(", ");
     Serial.println(bit);
-   if (value >= 0 && value <= 3)
-    Serial.println(value);
     //Serial.println(results.value);
    // Serial.println(results.value, HEX);
     irrecv.resume(); // Receive the next value

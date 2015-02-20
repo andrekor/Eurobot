@@ -15,9 +15,9 @@
 
 #define testPin 11
 
-#define VALUE_BEACON_A 32480
-#define VALUE_BEACON_B 338
-#define VALUE_BEACON_C 339
+#define VALUE_BEACON_A 339
+#define VALUE_BEACON_B 32480
+#define VALUE_BEACON_C 338
 
 //Setting ip the IR receiver
 IRrecv irrecv(RECV_PIN);
@@ -51,7 +51,29 @@ unsigned long time;
 boolean towerStop = false;
 Tienstra *t;
 
+/*Creates linkedlist that holds all the angles of for each of the beacons per round. For testing*/
+struct beaconAngleA {
+  float angle;
+  beaconAngleA *next;
+}typedef LIST_A;
+
+struct beaconAngleB {
+  float angle;
+  beaconAngleB *next;
+}typedef LIST_B;
+
+struct beaconAngleC {
+  float angle;
+  beaconAngleC *next;
+}typedef LIST_C;
+
 void setup() {
+	//The roots of linkedlists, all 	
+	LIST_A *stepA; = (LIST_A *)malloc(sizeof(LIST_A));
+	LIST_B *stepB; = (LIST_B *)malloc(sizeof(LIST_B));
+	LIST_C *stepC; = (LIST_C *)malloc(sizeof(LIST_C));
+
+
 	t = new Tienstra();
 	t->initialization();
 //	setVariablesZero();
@@ -74,10 +96,10 @@ void setup() {
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
-	//testRun2();
+	testRun2();
 	//testBeacon();
 	//hallo();
-	widthTest();
+	//widthTest();
 	//irTest();
 }
 
@@ -144,6 +166,7 @@ int i = 0;
 void loop() {
 }	
 
+
 /*
 Test program. Turns the tower one and a half round, and calculate the angle of the beacons. 
 */
@@ -209,7 +232,6 @@ void testRun() {
 void testRun2() {
 	while(1) {
 		while(1) {
-			receiveBeaconSignal();
 			step();
 			if (stepCount >= oneRevolution) {
 				break;
@@ -220,40 +242,46 @@ void testRun2() {
 			angleNegative();
 		else 
 			anglePositive();
+		if (numAngles >= 3) {
+		//	Serial.println("\n Calculateing the position: ");
 
-		if (numAngles == 3) {
-			Serial.println("\n Calculateing the position: ");
-
-			t->calculate();
+			t->calculate(); //the calculated x and y position is public variables in tienstra
 		}
-		//Prints the position
-		Serial.println("Position");
+			//Prints the position
+		Serial.print("[");
 		Serial.print(t->XR);
-		Serial.print(", ");
-		Serial.println(t->YR);
-		Serial.println();
-		Serial.print("gamma : ");
-		Serial.println(t->gamma);
-		Serial.print("beta : ");
-		Serial.println(t->beta);
-		Serial.print("alpha : ");
-		Serial.println(t->alpha);
+		Serial.print(" ");
+		Serial.print(t->YR);
+		Serial.print("], [");
+		Serial.print(t->gamma);
+		Serial.print(" ");
+		Serial.print(t->beta);
+		Serial.print(" ");
+		Serial.print(t->alpha);
+		Serial.println("]");
+			/*Serial.print("gamma : ");
+			Serial.println(t->gamma);
+			Serial.print("beta : ");
+			Serial.println(t->beta);
+			Serial.print("alpha : ");
+			Serial.println(t->alpha);
+			*/
+	/*
+			Serial.print("A: ");		
+			printStuff(firstAstep, averageA, aSteps, a_counter);
+			Serial.print("B: ");		
+			printStuff(firstBstep, averageB, bSteps, b_counter);
+			Serial.print("C: ");		
+			printStuff(firstCstep, averageC, cSteps, c_counter);
+	*/
 
-		Serial.print("A: ");		
-		printStuff(firstAstep, averageA, aSteps, a_counter);
-		Serial.print("B: ");		
-		printStuff(firstBstep, averageB, bSteps, b_counter);
-		Serial.print("C: ");		
-		printStuff(firstCstep, averageC, cSteps, c_counter);
-
-
-		/*
-		Serial.print("Angle to beacon A: ");
-		Serial.println(angle(aSteps));
-		Serial.print("Angle to beacon B: ");
-		Serial.println(angle(bSteps));
-		Serial.print("Angle to beacon C: ");
-		Serial.println(angle(cSteps));
+			/*
+			Serial.print("Angle to beacon A: ");
+			Serial.println(angle(aSteps));
+			Serial.print("Angle to beacon B: ");
+			Serial.println(angle(bSteps));
+			Serial.print("Angle to beacon C: ");
+			Serial.println(angle(cSteps));
 */
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
@@ -356,7 +384,7 @@ void zeroCounters() {
 
 void widthTest() {
 	while(1) {
-		if (digitalRead(testPin)){
+	//	if (digitalRead(testPin)){
 			stepCount = 0;
 			int d = !digitalRead(dirPin);
 			digitalWrite(dirPin, d);
@@ -364,13 +392,16 @@ void widthTest() {
 				step();
 				receiveBeaconSignal();
 			}
-			
-			Serial.print(angle(firstAstep-aSteps));
-			Serial.print(" , ");
-			Serial.println(a_counter);
+			Serial.print("[");
+			Serial.print(angle(firstAstep));
+			Serial.print(" ");
+			Serial.print(angle(aSteps));
+			Serial.print("]   [");
+			Serial.print(abs(angle(firstAstep-aSteps)));
+			Serial.println("]");
 			zeroCounters();
 		}
-	}
+	//}
 }
 
 
@@ -398,7 +429,7 @@ To make one step with the stepper motor
 void step() {
 	//Maybe need to or in the value for the pin
 	//if ((micros() - time) > MICRO_DELAY) {
-		time = micros();
+		//time = micros();
 		digitalWrite(stepPin, HIGH);
 		digitalWrite(stepPin, LOW);
 		stepCount++;
@@ -464,6 +495,18 @@ steps will be the last step in the intervall where the tower sees the beacon.
 */
 void setStep(int beacon) {
 	if (beacon == 1) {
+		//Adds the steps in a Linked List
+		if (stepA == NULL) {
+			 stepA = (LIST_A *)malloc(sizeof(LIST_A));
+			 stepA->next = NULL;
+			 stepA->step = aSteps;
+		} else {
+			LIST_A *tmp = stepA;
+			stepA =  = (LIST_A *)malloc(sizeof(LIST_A));
+			stepA->step = aSteps;
+			stepA->next = tmp;
+		}
+
 		aSteps = stepCount%oneRevolution; 
 		if (firstAstep < 0) {//first time on this round that we receive a signal from the given beacon
 			firstAstep = aSteps; 

@@ -3,10 +3,10 @@
 #define XA 0
 #define YA 50
 
-#define XB 170
+#define XB 150
 #define YB 100
 
-#define XC 170
+#define XC 150
 #define YC 0
 
 class Tienstra {
