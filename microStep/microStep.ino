@@ -52,20 +52,20 @@ boolean towerStop = false;
 Tienstra *t;
 
 /*Creates linkedlist that holds all the angles of for each of the beacons per round. For testing*/
-typedef struct beaconAngle {
+struct beaconAngle {
   float step;
   beaconAngle *next;
-} LIST;
+};
 
-LIST *stepA;
-LIST *stepB;
-LIST *stepC;
+struct beaconAngle *stepA;
+struct beaconAngle *stepB;
+struct beaconAngle *stepC;
 
 void setup() {
 	//The roots of linkedlists, all 	
-	stepA = (LIST *)malloc(sizeof(LIST));
-	stepB = (LIST *)malloc(sizeof(LIST));
-	stepC = (LIST *)malloc(sizeof(LIST));
+	stepA = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
+	stepB = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
+	stepC = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
 
 
 	t = new Tienstra();
@@ -482,14 +482,14 @@ void receiveBeaconSignal() {
     //continue to look for more beacons. 
 } 
 
-LIST addInList(LIST *l, float steps) {
+struct beaconAngle addInList(struct beaconAngle *l, float steps) {
 	if (l == NULL) {
-		l = (LIST *)malloc(sizeof(LIST));
+		l = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
 		l->step = steps;
 		l->next = NULL;
 	} else {
-		LIST *tmp = l;
-		l = (LIST *)malloc(sizeof(LIST));
+		struct beaconAngle *tmp = l;
+		l = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
 		l->step = steps;
 		l->next=tmp;
 	}
