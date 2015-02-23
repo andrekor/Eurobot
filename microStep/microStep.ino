@@ -3,9 +3,17 @@
 */
 #include <Stepper.h>
 #include <IRremote.h>
+//For testing, to map all of the angles
+#include <QueueList.h>
 #include "tienstra.h"
 
-#define MICRO_DELAY 400 //The delay are not used inside the interrupt
+//1 if all the steps should be saved in Queue, 0 if not
+//For debugging (width test)
+#define AQueue 1
+#define BQueue 1
+#define CQueue 1
+
+#define MICRO_DELAY 350 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
@@ -15,9 +23,10 @@
 
 #define testPin 11
 
-#define VALUE_BEACON_A 339
-#define VALUE_BEACON_B 32480
+#define VALUE_BEACON_A 32480
+#define VALUE_BEACON_B 339
 #define VALUE_BEACON_C 338
+float realAverage(QueueList<float>);
 
 //Setting ip the IR receiver
 IRrecv irrecv(RECV_PIN);
@@ -51,23 +60,12 @@ unsigned long time;
 boolean towerStop = false;
 Tienstra *t;
 
-/*Creates linkedlist that holds all the angles of for each of the beacons per round. For testing*/
-struct beaconAngle {
-  float step;
-  beaconAngle *next;
-};
-
-struct beaconAngle *stepA;
-struct beaconAngle *stepB;
-struct beaconAngle *stepC;
+// create a queue of strings messages.
+QueueList <float> queueA;
+QueueList <float> queueB;
+QueueList <float> queueC;
 
 void setup() {
-	//The roots of linkedlists, all 	
-	stepA = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
-	stepB = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
-	stepC = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
-
-
 	t = new Tienstra();
 	t->initialization();
 	//Setup the ir receiver
@@ -85,42 +83,18 @@ void setup() {
 	stepCount = 0; 
 	time = micros();
 	Serial.begin(9600);
-
+	//Set the printer of the queue
+	queueA.setPrinter (Serial);
+	queueB.setPrinter (Serial);
+	queueC.setPrinter (Serial);
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
-	testRun2();
+//	testRun2();
 	//testBeacon();
-	//hallo();
-	//widthTest();
+	widthTest();
+	//widthAverage();
 	//irTest();
-}
-
-
-void irTest() {
-	while(1)
-		decode();
-}
-
-void hallo() {
-	while(1) {
-		while(1) {
-			step();
-			receiveBeaconSignal();
-			if (stepCount > oneRevolution) {
-				stepCount = 0;
-				int d = !digitalRead(dirPin);
-				digitalWrite(dirPin, d);
-				break;
-			}
-		}
-	Serial.print("First a: ");
-	Serial.println(firstAstep);
-	Serial.print("A step: ");
-	Serial.println(aSteps);
-	Serial.println();
-	delay(2000);
-	}
 }
 
 //To setup the interrupts. 
@@ -225,6 +199,7 @@ void testRun() {
 void testRun2() {
 	while(1) {
 		while(1) {
+			receiveBeaconSignal();
 			step();
 			if (stepCount >= oneRevolution) {
 				break;
@@ -252,30 +227,14 @@ void testRun2() {
 		Serial.print(" ");
 		Serial.print(t->alpha);
 		Serial.println("]");
-			/*Serial.print("gamma : ");
-			Serial.println(t->gamma);
-			Serial.print("beta : ");
-			Serial.println(t->beta);
-			Serial.print("alpha : ");
-			Serial.println(t->alpha);
-			*/
-	/*
-			Serial.print("A: ");		
-			printStuff(firstAstep, averageA, aSteps, a_counter);
-			Serial.print("B: ");		
-			printStuff(firstBstep, averageB, bSteps, b_counter);
-			Serial.print("C: ");		
-			printStuff(firstCstep, averageC, cSteps, c_counter);
-	*/
+		Serial.print("[");
+		Serial.print(a_counter);
+		Serial.print(" ");
+		Serial.print(b_counter);
+		Serial.print(" ");
+		Serial.print(c_counter);
+		Serial.println("] ");
 
-			/*
-			Serial.print("Angle to beacon A: ");
-			Serial.println(angle(aSteps));
-			Serial.print("Angle to beacon B: ");
-			Serial.println(angle(bSteps));
-			Serial.print("Angle to beacon C: ");
-			Serial.println(angle(cSteps));
-*/
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
 		stepCount = 0;
@@ -301,6 +260,32 @@ void printStuff(int first, int average, int last, int num)  {
 	Serial.println(num);
 }
 
+void widthAverage() {
+	delay(2000);
+	while(1) {
+		while(stepCount < oneRevolution){
+			receiveBeaconSignal();
+			step();
+		}	
+		
+		Serial.print(realAverage(1));
+		Serial.print(" -> A  ");
+		printStuff(firstAstep, averageA, aSteps, a_counter);
+		Serial.print(realAverage(2));
+		Serial.print(" -> ");
+		printStuff(firstBstep, averageB, bSteps, b_counter);
+		Serial.print(realAverage(3));
+		Serial.print(" -> ");
+		printStuff(firstCstep, averageC, cSteps, c_counter);
+
+		//Change direction of stepper
+		int d = !digitalRead(dirPin);
+		digitalWrite(dirPin, d);
+		zeroCounters();
+		delay(2000);
+	}
+}
+
 float average_angle(float first, float last) {
 	return (first+last)/2;
 }
@@ -309,8 +294,8 @@ void testBeacon() {
 	while(1) {
 		if (digitalRead(testPin)) {
 		while(firstAstep < 0 && stepCount < oneRevolution){
-			step();
 			receiveBeaconSignal();
+			step();
 		}	
 
 		Serial.print("First A step ");
@@ -373,30 +358,82 @@ void zeroCounters() {
 	averageC = 0;
 	numAngles = 0;
 	rCnt = 0;
+	//stepA = NULL; //Should free everything
 }
 
 void widthTest() {
+	delay(2000);
 	while(1) {
 	//	if (digitalRead(testPin)){
 			stepCount = 0;
 			int d = !digitalRead(dirPin);
 			digitalWrite(dirPin, d);
 			while (stepCount < oneRevolution) {
-				step();
 				receiveBeaconSignal();
+				step();
 			}
+			setAverage();
+			if (digitalRead(dirPin))
+				angleNegative();
+			else 
+				anglePositive();
+
 			Serial.print("[");
-			Serial.print(angle(firstAstep));
+			Serial.print(t->gamma);
 			Serial.print(" ");
-			Serial.print(angle(aSteps));
-			Serial.print("]   [");
-			Serial.print(abs(angle(firstAstep-aSteps)));
+			Serial.print(t->beta);
+			Serial.print(" ");
+			Serial.print(t->alpha);
 			Serial.println("]");
+			#if AQueue
+				Serial.print("A: ");
+				printAllAngles(1); //1 - A, 2 - B, 3 - C
+			#endif
+			#if BQueue
+				Serial.print("B: ");
+				printAllAngles(2); //1 - A, 2 - B, 3 - C
+			#endif
+			#if CQueue
+				Serial.print("C: ");
+				printAllAngles(3); //1 - A, 2 - B, 3 - C
+			#endif
+			delay(2000);
 			zeroCounters();
 		}
 	//}
 }
 
+void printAllAngles(int num) {
+	QueueList<float> q;
+	Serial.print("[");
+	switch (num) {
+		case 1: 
+			while(!queueA.isEmpty()) {
+				if (queueA.peek() < 0) {
+					queueA.pop();
+				}
+				else {
+					Serial.print(angle(queueA.pop()));	
+					Serial.print(" ");
+				}
+			}
+			break;
+		case 2:
+			while(!queueB.isEmpty()) {
+				Serial.print(angle(queueB.pop()));	
+				Serial.print(" ");
+			}	
+			break;
+		case 3:
+			while(!queueC.isEmpty()) {
+				Serial.print(angle(queueC.pop()));	
+				Serial.print(" ");
+			}
+			break;
+	}
+	Serial.println("]");
+
+}
 
 void rotate() {
 	digitalWrite(stepPin, HIGH);
@@ -482,42 +519,34 @@ void receiveBeaconSignal() {
     //continue to look for more beacons. 
 } 
 
-struct beaconAngle addInList(struct beaconAngle *l, float steps) {
-	if (l == NULL) {
-		l = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
-		l->step = steps;
-		l->next = NULL;
-	} else {
-		struct beaconAngle *tmp = l;
-		l = (struct beaconAngle *)malloc(sizeof(struct beaconAngle));
-		l->step = steps;
-		l->next=tmp;
-	}
-	return *l;
-}
-
 /*
 steps will be the last step in the intervall where the tower sees the beacon. 
 */
 void setStep(int beacon) {
 	if (beacon == 1) {
 		//Adds the steps in a Linked List
-		//stepA = addInList(stepA, aSteps);
+		#if AQueue
+			queueA.push(aSteps);
+		#endif
 		aSteps = stepCount%oneRevolution; 
 		if (firstAstep < 0) {//first time on this round that we receive a signal from the given beacon
 			firstAstep = aSteps; 
 			numAngles++; 
 		}
 	} else if (beacon == 2) {
-		//stepB = addInList(stepB, aSteps);
-		bSteps = stepCount;
+		#if BQueue
+			queueB.push(bSteps);
+		#endif
+		bSteps = stepCount%oneRevolution;
 		if (firstBstep < 0) {
 			firstBstep = bSteps;
 			numAngles++; 
 		}
 	} else {
-	//	stepC = addInList(stepC, aSteps);
-		cSteps = stepCount;
+		#if CQueue
+			queueC.push(cSteps);
+		#endif
+		cSteps = stepCount%oneRevolution;
 		if (firstCstep < 0) {
 			firstCstep = cSteps;
 			numAngles++; 	
@@ -547,6 +576,29 @@ void setAverage() {
 		averageC = average_angle(firstCstep, cSteps);
 	else 
 		averageC = average_angle((oneRevolution-max(firstCstep, cSteps)), min(firstCstep, cSteps));
+}
+
+float realAverage(int num) {
+	float sum = 0;
+	int i = 0;
+	switch (num) {
+		case 1: 
+			while(!queueA.isEmpty()) {
+				sum += queueA.pop();
+			}
+			break;
+		case 2:
+			while(!queueB.isEmpty()) {
+				sum += queueB.pop();
+			}	
+			break;
+		case 3:
+			while(!queueC.isEmpty()) {
+				sum += queueC.pop();
+			}
+			break;
+	}
+	return (i == 0 ? 0 : (sum/i));
 }
 
 void anglePositive() {
