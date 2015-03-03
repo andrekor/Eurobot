@@ -63,7 +63,6 @@ void Tienstra::initialization() {
 void Tienstra::calculate() {
    //Calculation of the angles from the stepper motor. should be here...
 
-
    // .....
    //calculations of the position starts here..
    //Cotangents of angles

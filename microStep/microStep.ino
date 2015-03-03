@@ -9,11 +9,11 @@
 
 //1 if all the steps should be saved in Queue, 0 if not
 //For debugging (width test)
-#define AQueue 1
-#define BQueue 1
-#define CQueue 1
+#define AQueue 0
+#define BQueue 0
+#define CQueue 0
 
-#define MICRO_DELAY 350 //The delay are not used inside the interrupt
+#define MICRO_DELAY 400 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
@@ -90,9 +90,9 @@ void setup() {
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
-//	testRun2();
+	testRun2();
 	//testBeacon();
-	widthTest();
+	//widthTest();
 	//widthAverage();
 	//irTest();
 }
@@ -216,6 +216,10 @@ void testRun2() {
 			t->calculate(); //the calculated x and y position is public variables in tienstra
 		}
 			//Prints the position
+		//Print for livePlot
+		livePlot(t->XR, t->YR);
+
+		/* print for matlab
 		Serial.print("[");
 		Serial.print(t->XR);
 		Serial.print(" ");
@@ -234,13 +238,18 @@ void testRun2() {
 		Serial.print(" ");
 		Serial.print(c_counter);
 		Serial.println("] ");
-
+*/
 		int dir = !digitalRead(dirPin);
 		digitalWrite(dirPin, dir);
 		stepCount = 0;
 		zeroCounters();
 		delay(3500);
 	}
+}
+
+void livePlot(float x, float y) {
+	//String s = x + "," + y;
+	//Serial.print(s);
 }
 
 void printStuff(int first, int average, int last, int num)  {
@@ -366,8 +375,6 @@ void widthTest() {
 	while(1) {
 	//	if (digitalRead(testPin)){
 			stepCount = 0;
-			int d = !digitalRead(dirPin);
-			digitalWrite(dirPin, d);
 			while (stepCount < oneRevolution) {
 				receiveBeaconSignal();
 				step();
@@ -397,6 +404,8 @@ void widthTest() {
 				Serial.print("C: ");
 				printAllAngles(3); //1 - A, 2 - B, 3 - C
 			#endif
+			int d = !digitalRead(dirPin);
+			digitalWrite(dirPin, d);
 			delay(2000);
 			zeroCounters();
 		}
