@@ -83,6 +83,7 @@ void setup() {
 	stepCount = 0; 
 	time = micros();
 	Serial.begin(9600);
+	randomSeed(analogRead(0));
 	//Set the printer of the queue
 	queueA.setPrinter (Serial);
 	queueB.setPrinter (Serial);
@@ -91,6 +92,7 @@ void setup() {
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
 	testRun2();
+	//fakeTest();
 	//testBeacon();
 	//widthTest();
 	//widthAverage();
@@ -112,7 +114,6 @@ void interruptSetup() {
   	TCCR0B |= (1 << CS01) | (1 << CS00);   
   	// enable timer compare interrupt
   	TIMSK0 |= (1 << OCIE0A);
-
 
   	//Set timer1 interrupt at 4000 hz
   	TCCR1A = 0; //Set entire TCCR2A register to 0
@@ -146,20 +147,6 @@ void testRun() {
 		if (stepCount == 1601)
 			break;
 	}
-	/*
-	Serial.print("A ");
-	Serial.print(aSteps);
-	Serial.print(" - ");
-	Serial.println(angle(aSteps));
-	Serial.print("B ");
-	Serial.print(bSteps);
-	Serial.print(" - ");
-	Serial.println(angle(bSteps));
-	Serial.print("C ");
-	Serial.print(cSteps);
-	Serial.print(" - ");
-	Serial.println(angle(cSteps));
-	*/
 	Serial.println("Angle on the beacons:");
 	Serial.println(angle(aSteps));
 	Serial.println(angle(bSteps));
@@ -216,7 +203,7 @@ void testRun2() {
 			t->calculate(); //the calculated x and y position is public variables in tienstra
 		}
 			//Prints the position
-		//Print for livePlot
+		//Print for livePlot should work like the fakeTest functioncall
 		livePlot(t->XR, t->YR);
 
 		/* print for matlab
@@ -243,14 +230,46 @@ void testRun2() {
 		digitalWrite(dirPin, dir);
 		stepCount = 0;
 		zeroCounters();
-		delay(3500);
+		delay(750);
 	}
 }
 
-void livePlot(float x, float y) {
-	//String s = x + "," + y;
-	//Serial.print(s);
+void fakeTest() {
+	float x_pos = 150.00;
+	float y_pos = 100.00;
+
+	for (int i = 0; i < 100; i++) {
+		livePlot(x_pos, y_pos);
+		x_pos += 5*fRandom(0, 1.0);
+		y_pos += 5*fRandom(0, 1.0);
+		delay(1000);
+	}
 }
+
+//Generates a double random, from a random int
+double fRandom(double fMin, double fMax) {
+	double ran = (double) random(1000)/1000.0;
+	return (fMin + ran*(fMax-fMin))*(random(2) == 0 ? -1 : 1);
+}
+
+void livePlot(float x1, float y1) {
+	String s1 = String(round(x1));
+	String s2 = String(round(y1));
+
+	String s3 = String(s1 + ",");
+	Serial.println(s3 + s2);
+	/*
+	String xSend = String("x"+s1);
+	String ySend = String("y"+s2);
+	//String s3 = String(s1 + ",");
+	//String pos = String(s3 + s2);
+	//String pos = String(s4 + ";");
+	Serial.println(xSend);
+	Serial.println(ySend);*/
+//	Serial.println(y1);
+}
+
+
 
 void printStuff(int first, int average, int last, int num)  {
 	Serial.print("[");

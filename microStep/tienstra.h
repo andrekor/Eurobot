@@ -1,6 +1,6 @@
 #include <math.h>
-#include <string>
-#include <iostream>
+//#include <string>
+//#include <iostream>
 //X og Y koordinater for beacons
 #define XA 0
 #define YA 100
@@ -18,7 +18,7 @@ public:
 	void calculate();
 	float robotAngle(float yi, float yr, float xi, float xr, float thetai);
 
- 	float XR;q		
+ 	float XR;
  	float YR;
  	float theta;
 
