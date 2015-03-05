@@ -1,7 +1,7 @@
 import processing.serial.*;
 
 Serial port;
-String inString = "(x,y)"; //String received from serial at the form: "x,y"
+String inString = ""; //String received from serial at the form: "x,y"
 
 int xSize = 900;
 int ySize = 600;
@@ -10,8 +10,7 @@ int x = 9;
 int y = 9;
 String pos = "Pos: ";
 
-void setup() {
-    
+void setup() {    
     println(Serial.list()); 
     if (Serial.list().length > 0)
       port = new Serial(this, Serial.list()[0], 9600);
@@ -24,13 +23,7 @@ int i = 0;
 int test[][] = {{10, 11, 50, 30, 20, 55, 77, 100},{10, 10, 10, 20, 20, 30, 40, 33}};
 
 void draw() {
-   //drawBot(7, 7);
-    /*while(port.available() > 0) {
-      int b = port.read();        
-    }*/
-
   drawBot(x, y);
- // String s = "Pos: " + x + "," + (ySize-y);
   fill(255);
   textSize(25);
   text(pos, 10, ySize-30);
@@ -56,8 +49,6 @@ void serialEvent(Serial port) {
     inString = port.readStringUntil(10);
     if (inString != null) {
       String[] coordinate = inString.split(","); //Should split on , splits everythin
-      //char check = inString.charAt(0);
-     // String[] coordinate = splitString(inString); //Should split on , splits everything
       /*for (int i = 0; i < coordinate.length; i++) {
         print(coordinate[i] + " "); 
       }*/
@@ -84,7 +75,7 @@ void drawXaxis() {
 
 void drawYaxis() {
   String s = "";
- for(int i = ySize-25; i > 0; i-=25) {
+  for(int i = ySize-25; i > 0; i-=25) {
     if ((i/3)%25 == 0) {
         s = ((ySize-i)/3) + "";
         textSize(16);
@@ -92,5 +83,5 @@ void drawYaxis() {
         stroke(255);
         line(0, ySize-i, xSize, ySize-i);
     }  
- }   
+  }   
 }

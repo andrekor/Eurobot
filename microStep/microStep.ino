@@ -12,9 +12,8 @@
 #define AQueue 0
 #define BQueue 0
 #define CQueue 0
-
-#define MICRO_DELAY 400 //The delay are not used inside the interrupt
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
+#define MICRO_DELAY 600
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
 #define stepPin 8 //Output pin for the steppermotor
@@ -91,7 +90,7 @@ void setup() {
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
-	testRun2();
+	//testRun2();
 	//fakeTest();
 	//testBeacon();
 	//widthTest();
@@ -132,6 +131,7 @@ void interruptSetup() {
 
 int i = 0;
 void loop() {
+	step();
 }	
 
 
