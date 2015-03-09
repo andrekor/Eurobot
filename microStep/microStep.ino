@@ -13,7 +13,7 @@
 #define BQueue 0
 #define CQueue 0
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
-#define MICRO_DELAY 600
+#define MICRO_DELAY 500
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
 #define stepPin 8 //Output pin for the steppermotor
@@ -22,9 +22,9 @@
 
 #define testPin 11
 
-#define VALUE_BEACON_A 32480
+#define VALUE_BEACON_A 338
 #define VALUE_BEACON_B 339
-#define VALUE_BEACON_C 338
+#define VALUE_BEACON_C 32480
 float realAverage(QueueList<float>);
 
 //Setting ip the IR receiver
@@ -34,13 +34,19 @@ decode_results results;
 int rCnt;
 
 int stepCount;
-
+//0 if not enough angles to calculate the position, 1 if enough
 int firstAstep = -1; //First step when the receiver recognize beacon A
 int firstBstep = -1; //First step when the receiver recognize beacon B
 int firstCstep = -1; //First step when the receiver recognize beacon C
 int aSteps = -1; //steps from start to beacon A
 int bSteps = -1;  //steps from start to beacon B
 int cSteps = -1; //steps from start to beacon C
+
+/*Booleans to check wether we have should zero firstA or not*/
+boolean A = true;
+boolean B = true;
+boolean C = true;
+
 float resolution;
 
 float averageA = 0;
@@ -90,6 +96,9 @@ void setup() {
 	//Setup the interrupt
 	 //set timer0 interrupt at 2kHz
 	//interruptSetup();
+	
+/*Test Cases*/
+	spinTest();
 	//testRun2();
 	//fakeTest();
 	//testBeacon();
@@ -131,9 +140,18 @@ void interruptSetup() {
 
 int i = 0;
 void loop() {
-	step();
 }	
 
+
+/*Test function for the second prototype, with slipring which allows the tower to 
+rortate continualy in the same direction.
+The function, steps, and sets the angle of each of the beacons. The direction is A -> B -> C -> A*/
+void spinTest() {
+	while(1) {
+		step();
+		receiveBeaconSignal();
+	}
+}
 
 /*
 Test program. Turns the tower one and a half round, and calculate the angle of the beacons. 
@@ -143,7 +161,6 @@ void testRun() {
 		step(); //steps one step of the stepper 1/1600
 		//checks for beacon signal one time per two steps 2/1600 = 1/800 = 0,45 degrees resolution
 		receiveBeaconSignal();
-		//Breaks after 1 round
 		if (stepCount == 1601)
 			break;
 	}
@@ -392,43 +409,45 @@ void zeroCounters() {
 void widthTest() {
 	delay(2000);
 	while(1) {
-	//	if (digitalRead(testPin)){
-			stepCount = 0;
-			while (stepCount < oneRevolution) {
-				receiveBeaconSignal();
-				step();
-			}
-			setAverage();
-			if (digitalRead(dirPin))
-				angleNegative();
-			else 
-				anglePositive();
-
-			Serial.print("[");
-			Serial.print(t->gamma);
-			Serial.print(" ");
-			Serial.print(t->beta);
-			Serial.print(" ");
-			Serial.print(t->alpha);
-			Serial.println("]");
-			#if AQueue
-				Serial.print("A: ");
-				printAllAngles(1); //1 - A, 2 - B, 3 - C
-			#endif
-			#if BQueue
-				Serial.print("B: ");
-				printAllAngles(2); //1 - A, 2 - B, 3 - C
-			#endif
-			#if CQueue
-				Serial.print("C: ");
-				printAllAngles(3); //1 - A, 2 - B, 3 - C
-			#endif
-			int d = !digitalRead(dirPin);
-			digitalWrite(dirPin, d);
-			delay(2000);
-			zeroCounters();
+		stepCount = 0;
+		while (stepCount < oneRevolution) {
+			receiveBeaconSignal();
+			step();
 		}
-	//}
+		setAverage();
+		if (digitalRead(dirPin))
+			angleNegative();
+		else 
+			anglePositive();
+
+		Serial.print("[");
+		Serial.print(t->gamma);
+		Serial.print(" ");
+		Serial.print(t->beta);
+		Serial.print(" ");
+		Serial.print(t->alpha);
+		Serial.println("]");
+		printQueue();
+		int d = !digitalRead(dirPin);
+		digitalWrite(dirPin, d);
+		delay(2000);
+		zeroCounters();
+	}
+}
+
+void printQueue() {	
+	#if AQueue
+		Serial.print("A: ");
+		printAllAngles(1); //1 - A, 2 - B, 3 - C
+	#endif
+	#if BQueue
+		Serial.print("B: ");
+		printAllAngles(2); //1 - A, 2 - B, 3 - C
+	#endif
+	#if CQueue
+		Serial.print("C: ");
+		printAllAngles(3); //1 - A, 2 - B, 3 - C
+	#endif
 }
 
 void printAllAngles(int num) {
@@ -467,7 +486,7 @@ void rotate() {
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
 	delayMicroseconds(MICRO_DELAY);
-	stepCount++; //Increase the step count
+	stepCount = (stepCount == 1600 ? 0 : stepCount+1);
 	i = stepCount/oneRevolution;
 	if (i >= 2) {
 //		Serial.println(i);
@@ -490,7 +509,8 @@ void step() {
 		//time = micros();
 		digitalWrite(stepPin, HIGH);
 		digitalWrite(stepPin, LOW);
-		stepCount++;
+		stepCount = (stepCount == 1600 ? 0 : stepCount+1);
+		//stepCount++;
 		delayMicroseconds(MICRO_DELAY);
 	//}
 }
@@ -518,12 +538,8 @@ void receiveBeaconSignal() {
 	rCnt++;
   if (irrecv.decode(&results)) {
   	int value = results.value; //lagrer IR-koden
-  	int length = results.bits;
-
- // 	Serial.print(value);
- // 	Serial.print("  ");
- // 	Serial.println(length);
-    //The beacon towers are coded with a value from 336, 338, 339
+  	//Serial.println(value);
+  //	int length = results.bits;
     switch (value) {
         case VALUE_BEACON_A:
  			setStep(1);
@@ -532,18 +548,16 @@ void receiveBeaconSignal() {
         case VALUE_BEACON_B:
         	setStep(2);
         	b_counter++;
-          //bSteps = stepCount;
           break;
         case VALUE_BEACON_C:
         	setStep(3);
         	c_counter++;
-        	//cSteps = stepCount;
         	break;
         default:
         	break;
-    	}
+   	}
     	irrecv.resume();
-    } 
+  } 
     //continue to look for more beacons. 
 } 
 
@@ -551,35 +565,106 @@ void receiveBeaconSignal() {
 steps will be the last step in the intervall where the tower sees the beacon. 
 */
 void setStep(int beacon) {
-	if (beacon == 1) {
+ 	if (beacon == 1) {
 		//Adds the steps in a Linked List
 		#if AQueue
 			queueA.push(aSteps);
 		#endif
-		aSteps = stepCount%oneRevolution; 
-		if (firstAstep < 0) {//first time on this round that we receive a signal from the given beacon
+		if (A) {//first time on this round that we receive a signal from the given beacon
+			A = false;
+			zeroOldestBeacon(1);
 			firstAstep = aSteps; 
 			numAngles++; 
 		}
+		aSteps = stepCount%oneRevolution; 
 	} else if (beacon == 2) {
 		#if BQueue
 			queueB.push(bSteps);
 		#endif
-		bSteps = stepCount%oneRevolution;
-		if (firstBstep < 0) {
+		if (B) {
+			zeroOldestBeacon(2);
+			B = false;
 			firstBstep = bSteps;
 			numAngles++; 
 		}
+		bSteps = stepCount%oneRevolution;
 	} else {
 		#if CQueue
 			queueC.push(cSteps);
 		#endif
-		cSteps = stepCount%oneRevolution;
-		if (firstCstep < 0) {
+		if (C) {
+			zeroOldestBeacon(3);
+			C = false;
 			firstCstep = cSteps;
 			numAngles++; 	
 		}
+		cSteps = stepCount%oneRevolution;
 	}
+}
+
+void printPos() {
+	Serial.print(t->XR);
+	Serial.print(", ");
+	Serial.println(t->YR);
+}
+
+void printAngles() {
+	Serial.print(t->alpha);
+	Serial.print(", ");
+	Serial.print(t->beta);
+	Serial.print(", ");
+	Serial.println(t->gamma);
+}
+
+void printSteps() {
+	Serial.print("A: ");
+	Serial.print(averageA);
+	Serial.print(",");
+	Serial.print("B: ");
+	Serial.print(averageB);
+	Serial.print(",");
+	Serial.print("C: ");
+	Serial.println(averageC);
+}
+
+void zeroOldestBeacon(int beacon) {
+	setAverage();
+	anglePositive();
+	t->calculate();
+	//printPos();
+	//printAngles();
+	//printSteps();
+	
+	//Zero the oldest beacon angles
+	switch (beacon) {
+		case 1: //if we see first signal from beacon A, we are allowed to look for B and C beacon. (calculate averagec)
+			B = true;
+			C = true;
+			if (abs(firstCstep-cSteps) < 1000)
+				averageC = average_angle(firstCstep, cSteps);
+			else 
+				averageC = average_angle((oneRevolution-max(firstCstep, cSteps)), min(firstCstep, cSteps));
+			break;
+		case 2: //If we see first signal from beacon B, we are allowed to look for A and C beacon. (calculate averageA)
+			A = true;
+			C = true;
+			if (abs(firstAstep-aSteps) < 1000)
+				averageA = average_angle(firstAstep, aSteps);
+			else 
+				averageA = average_angle((oneRevolution-max(firstAstep, aSteps)), min(firstAstep, aSteps));
+			break;	
+		case 3: //If we see first signal from beacon C, we are allowed to look for A and B beacon. (calculate averageB)
+			A = true;
+			B = true;
+			if (abs(firstBstep-bSteps) < 1000)
+				averageB = average_angle(firstBstep, bSteps);
+			else 
+				averageB = average_angle((oneRevolution-max(firstBstep, bSteps)), min(firstBstep, bSteps));
+			break;
+		default:
+			break;
+	}
+
 }
 
 /*Calculates the angle in degree, when we know the how many steps we have gone*/
