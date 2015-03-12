@@ -114,6 +114,6 @@ void Tienstra::calculate() {
 Takes in the position of the robot, the position of the beacon, and the angle of the beacon
 Returns the angle of the robot. 
 */
-float robotAngle(float yi, float yr, float xi, float xr, float thetai) {
-   return atan2(yi-yr, xi-xr) - thetai;
+float robotAngle(float yi, float xi, float thetai) {
+   return atan2(yi-YR, xi-XR) - thetai;
 }

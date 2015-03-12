@@ -8,7 +8,8 @@
     #include <string.h>
     #include <stdio.h>
     //my matrix library, you can use your own favorite matrix library
-    #include “matrixClass.h”
+    //Try armadillo perhaps? Look around
+    //#include “matrixClass.h”
     #define TIMESTEP 0.05
 
     using namespace std;
@@ -97,7 +98,7 @@
     action[2][0]=tau3;
 
     matrix temp1(6,6);
-    matrix temp2(6,6);
+    matrix temp2(6,6); not use
     matrix temp3(6,6);
     matrix temp4(6,1);
     /************ Prediction Equations*****************/
@@ -110,7 +111,7 @@
 
     state = x + K*(y-C*lastState);
 
-    P = (eye(6) – K*C)*p;
+    P = (eye(6) – K*C)*p; //Sets elements along main diagonal to one and off-diagonal elements to zero
 
     a1=state[0][0];
     a2=state[1][0];
