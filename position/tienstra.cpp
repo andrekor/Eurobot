@@ -115,5 +115,6 @@ Takes in the position of the robot, the position of the beacon, and the angle of
 Returns the angle of the robot. 
 */
 float robotAngle(float yi, float xi, float thetai) {
-   return atan2(yi-YR, xi-XR) - thetai;
+  // return atan2(yi-YR, xi-XR) - thetai;
+   return 0;
 }

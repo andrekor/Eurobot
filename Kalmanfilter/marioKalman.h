@@ -1,31 +1,49 @@
 #include <iostream>
 #include <armadillo>
+#include <zmq.hpp>
 
 #define TIMESTEP 0.05;
+#define N 3
 
+//namespace for armadillo matrix library
 using namespace arma;
+
+//Prepare the context and socket
+/*zmq::context_t context(1);
+zmq::socket_t socket (context, ZMQ_REP);
+socket.bind("tcp://*:5555");
+*/
 
 /*Create a Kalman filter class*/
 class marioKalman {
 	public: 
 		marioKalman();
+		void initKalman();
 		void predict();
 		void update();
 		void velocity();
+		void setMeasure(float, float, float);
+		void setAmatrix(mat, float[][N]);
+		void matrix(mat, float[][N]);
+		void setBmatrix(mat);
+		void queuePosition();
+		void receivePosition();
+		mat getState();
+		mat getMeasures();
 		
 	protected:
 		float aXv, aYv, v;
-		float TIME=0;
-		mat x = mat(5, 1); 
-		mat state = mat(5, 1); //Posx, Posy, Heading 
-		mat lastState = mat(5, 1); //previouse state 
-		mat action = mat(5, 1); //the action (movement from encoders)
-		mat A = mat(5,5); //A matrix (transition matrix)
-		mat B = mat(5,5); //B matrix (transition matrix for the action)
-		mat Z = mat(5,1); //Measurement matrix (Beacon position)
-		mat P = eye(5,5); //covariance matrix
-		mat Q = eye(5,5); // calcpos uncertainty matrix (put the error here)
-		mat R = eye(5,5); //Measurement uncertainty matrix
-		mat H = eye(5,5);
-		mat K = mat(5,5);//kalman gain
+		float TIME;
+		mat x; 
+		mat state; //Posx, Posy, Heading 
+		mat lastState; //previouse state 
+		mat action; //the action (movement from encoders)
+		mat A; //A matrix (transition matrix)
+		mat B; //B matrix (transition matrix for the action)
+		mat Z; //Measurement matrix (Beacon position)
+		mat P; //covariance matrix
+		mat Q; // calcpos uncertainty matrix (put the error here)
+		mat R; //Measurement uncertainty matrix
+		mat H; //Measurement likelihood matrix
+		mat K;//kalman gain
 };

@@ -1,1 +1,3 @@
 Kalmanfilter/armadillo-4.650.3
+*.class
+*.o

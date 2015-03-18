@@ -143,7 +143,7 @@ To make one step with the stepper motor
 void step() {
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
-	stepCount = (stepCount == 1600 ? 0 : stepCount+1); //Resets after 1 revoltion
+	stepCount = (stepCount == 1600 ? 0 : stepCount+1); //Resets after 1 revltion
 	delayMicroseconds(MICRO_DELAY);
 }
 
@@ -152,7 +152,7 @@ from which beacon the signal comes from*/
 void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
   	int value = results.value; //lagrer IR-koden
-    switch (value) {
+    switch (value) { //sjekker om vi har et gyldig IR-signal
         case VALUE_BEACON_A:
  			setStep(1);
           break;
@@ -175,7 +175,7 @@ steps will be the last step in the intervall where the tower sees the beacon.
 */
 void setStep(int beacon) {
  	if (beacon == 1) {
-		if (A) {
+		if (A) { //er true, hvis dette er første signal fra denne beaconen på denne runden
 			A = false;
 			zeroOldestBeacon(1);
 			firstAstep = stepCount; 
@@ -198,12 +198,13 @@ void setStep(int beacon) {
 	}
 }
 
+/*Skal kunn komme inn her når vi får signal fra en ny beacon*/
 void zeroOldestBeacon(int beacon) {
 	//Zero the oldest beacon angles
 	switch (beacon) {
 		case 1: //if we see first signal from beacon A, we are allowed to look for B and C beacon. (calculate averagec)
 			C = true;
-			if () 
+			if (firstCstep > lastCstep) 
 				averageC = average_angle(firstCstep, lastCstep);
 			else 
 				averageC = average_angle((oneRevolution-max(firstCstep, lastCstep)), min(firstCstep, lastCstep));
@@ -241,7 +242,7 @@ void zeroOldestBeacon(int beacon) {
 	t->calculate();
 	//IF the tower starts strait forward: takes in position of beacon we have a measure to
 	//should use the beacon that gets correct angles the most
-	t->robotAngle(0, 100, averageA);
+	//t->robotAngle(0, 100, averageA);
 }
 
 
