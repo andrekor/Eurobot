@@ -1,6 +1,7 @@
 #include <iostream>
 #include <armadillo>
 #include <zmq.hpp>
+#include <stdlib.h>
 
 #define TIMESTEP 0.05;
 #define N 3
@@ -28,6 +29,7 @@ class marioKalman {
 		void setBmatrix(mat);
 		void queuePosition();
 		void receivePosition();
+		void setState(mat);
 		mat getState();
 		mat getMeasures();
 		

@@ -22,6 +22,9 @@ marioKalman::marioKalman() {
 	lastState = mat(3, 1); //previouse state 
 	action = mat(3, 1); //the action (movement from encoders)
 	A = mat(3,3); //A matrix (transition matrix)
+	A.eye();
+	B.eye();
+	Z.zeros();
 	B = mat(3,3); //B matrix (transition matrix for the action)
 	Z = mat(3,1); //Measurement matrix (Beacon position)
 	P = eye(3,3); //covariance matrix
@@ -29,7 +32,7 @@ marioKalman::marioKalman() {
 	R = eye(3,3); //Measurement uncertainty matrix
 	H = eye(3,3);
 	K = mat(3,3);//kalman gain
-
+	K.eye();
 	lastState = state;
 	aXv = 0;
 	aYv = 0;
@@ -49,15 +52,18 @@ void marioKalman::initKalman() {
 	for (int i = 0; i < (sizeof(a[1])/sizeof(float)); i++) {
 		for (int j = 0; j < (sizeof(a[1])/sizeof(float)); j++) {
 			//std::cout << i << ", " << j << std::endl;
-			A(i, j) = a[i][j];
+			//A(i, j) = a[i][j];
 		}
 	}
 }
 
 void marioKalman::predict() {
+	//std::cout << "Predict part: " << std::endl;
 	lastState = state;
 	x = A*lastState; //+B*action; //prediction of the position
+//	std::cout << A << " * " << lastState << std::endl;
 	P = A*P*A.t()+Q; //Q-is the noise
+	//std::cout << P << " + " << Q << " (noise)" << std::endl;
 }
 
 void marioKalman::update() {
@@ -115,6 +121,12 @@ void marioKalman::setBmatrix(mat b) {
 	B = b;
 }
 
+
+void marioKalman::setState(mat initState) {
+	lastState = initState;
+	state = initState;
+}
+
 /*Puts the estimated position in the queue for the controll*/
 void queuePosition() {
 /*	zmq::message_t send;
@@ -130,8 +142,44 @@ void receivePosition() {
 	*/
 }
 
+void kalmanTest(marioKalman *m) {
+	mat wantedPath(16, 3); //fixed datapoints..
+	mat initState(3,1);
+	float test[16][3] = {{50.0,0.0,90.0},{50.0,20.0,90.0},{50.0,40.0,90.0},{55.0,50.0,45.0},{65.0,60.0,45.0},{75.0,65.0,20.0},{80.0,65.0,0.0},{90.0,65.0,0.0},{110.0,65.0,0.0},{130.0,65.0,0.0},{145.0,55.0,-45.0},{150.0,45.0,-90.0},{150.0,35.0,-90.0},{150.0,20.0,-90.0},{150.0,0.0,-90.0},{150.0,0.0,0.0}};
+	initState(0,0) = test[0][0]; initState(1,0) = test[0][1]; initState(2,0) = test[0][2];
+	//float *test[3] = {{4.0, 3.0, 3.0}, {4.0, 4.0, 4.0}};
+	//float *test[3] = {{50,0,90},{50,20,90},{50,40,90},{55,50,45},{65,60,45},{75,65,20},{80,65,0},{90,65,0},{110,65,0},{130,65,0},{145,55,-45},{150,45,-90},{150,35,-90},{150,20,-90},{150,0,-90},{150,0,0}};
+	//for (int i = )
+	m->initKalman();
+	for (int i = 0; i < 16; i++) {
+		for (int j = 0; j < 3; j++) {
+			wantedPath(i,j) = test[i][j];
+		}
+	}
+	mat saveState(16, 3);
+	//16 iterations for the kalman filter
+	m->setState(initState);
+	mat temp(3, 1);
+	temp.zeros();
+	for (int i = 0; i < 15; i++) {
+		m->setMeasure(test[i+1][0]+(rand()%20), test[i+1][1]+(rand()%10), test[i+1][2]+(rand()%5));
+		m->predict();
+		m->update();
+		//Her we apply an action to the encoders so (lastState - wantedState) => tells how much to drive
+		temp(0, 0) = test[i+1][0]; temp(1, 0) = test[i+1][1]; temp(2, 0) = test[i+1][2];
+		std::cout << "The " << i << " iteration" << std::endl;
+		std::cout << "Kalmanfilter " << std::endl << m->getState() << std::endl; //state from Kalmanfilter
+		std::cout << "Measure from beacon " << std::endl << m->getMeasures() << std::endl;
+		std::cout << "Wanted path " << std::endl << temp << std::endl;
+		m->setState(temp);
+	}
+	mat pos = m->getState();
+
+}
+
 int main() {
 	marioKalman *m = new marioKalman();
+	kalmanTest(m);
 	m->initKalman();
 	std::cout << m->getState() << std::endl;
 	m->setMeasure(10, 10, 10);
