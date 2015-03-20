@@ -46,12 +46,14 @@ void marioKalman::initKalman() {
 	float a[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric
 	float p[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric. Will be updated at later point
 	float h[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric
-	float q[N][N] = {{0.64, 0, 0}, {0, 0.64, 0}, {0, 0, 0.25}};
-	float r[N][N] = {{0.44, 0, 0}, {0, 0.18, 0}, {0, 0, 0.6}};
+	float q[N][N] = {{64, 0, 0}, {0, 64, 0}, {0, 0, 25}};
+	float r[N][N] = {{400, 0, 0}, {0, 20, 0}, {0, 0, 60}};
 	//std::cout << "a: " << sizeof(a) << " float: " << sizeof(float) << " a[1] " << sizeof(a[1]) << std::endl;
 	for (int i = 0; i < (sizeof(a[1])/sizeof(float)); i++) {
 		for (int j = 0; j < (sizeof(a[1])/sizeof(float)); j++) {
 			//std::cout << i << ", " << j << std::endl;
+			R(i, j) = r[i][j];
+			Q(i, j) = q[i][j];
 			//A(i, j) = a[i][j];
 		}
 	}

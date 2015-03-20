@@ -1,0 +1,370 @@
+Material benyttet til å måle distance til er blank hvit papp.
+
+
+Actual 100 cm:
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+33
+in, 83cm
+3
+
+
+
+
+
+
+Actual 50 cm:
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+
+
+Actual 40 cm:
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+12in, 30cm
+
+
+Actual 30 cm:
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+
+
+Actual 25 cm:
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+17in, 43cm
+
+
+
+Actual 15 cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+22in, 55cm
+
+
+
+
+
+Material benyttet svart blank plastikk:
+
+Actual 30:
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+11in, 27cm
+11in, 27cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+11in, 27cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+10in, 25cm
+
+
+
+Actual 44 cm:
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
+15in, 38cm
