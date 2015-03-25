@@ -187,12 +187,14 @@ void server() {
 	//Prepare the context and socket
 	zmq::context_t context(1);
 	zmq::socket_t socket(context, ZMQ_REP);
-	socket.bind("tcp://*:5556");
+	socket.bind("tcp://*:5555");
 
 	while(true) {
 		zmq::message_t request;
 		//Wait for next request from client
 		socket.recv(&request);
+		//Her should we receive the position from the encoders
+		//and calculate the kalman position, before replying with this.
 		std::cout << "Received Hello" << std::endl;
 
 		//do som thing
