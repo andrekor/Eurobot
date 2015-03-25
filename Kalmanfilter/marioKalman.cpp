@@ -35,6 +35,7 @@ marioKalman::marioKalman() {
 	K.eye();
 	lastState = state;
 	aXv = 0;
+Kalmanestimate:
 	aYv = 0;
 }
 
@@ -46,8 +47,8 @@ void marioKalman::initKalman() {
 	float a[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric
 	float p[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric. Will be updated at later point
 	float h[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric
-	float q[N][N] = {{64, 0, 0}, {0, 64, 0}, {0, 0, 25}};
-	float r[N][N] = {{400, 0, 0}, {0, 20, 0}, {0, 0, 60}};
+	float q[N][N] = {{0.064, 0, 0}, {0, 0.064, 0}, {0, 0, 0.025}};
+	float r[N][N] = {{5, 0, 0}, {0, 5, 0}, {0, 0, 0.5}};
 	//std::cout << "a: " << sizeof(a) << " float: " << sizeof(float) << " a[1] " << sizeof(a[1]) << std::endl;
 	for (int i = 0; i < (sizeof(a[1])/sizeof(float)); i++) {
 		for (int j = 0; j < (sizeof(a[1])/sizeof(float)); j++) {
@@ -147,7 +148,7 @@ void receivePosition() {
 void kalmanTest(marioKalman *m) {
 	mat wantedPath(16, 3); //fixed datapoints..
 	mat initState(3,1);
-	float test[16][3] = {{50.0,0.0,90.0},{50.0,20.0,90.0},{50.0,40.0,90.0},{55.0,50.0,45.0},{65.0,60.0,45.0},{75.0,65.0,20.0},{80.0,65.0,0.0},{90.0,65.0,0.0},{110.0,65.0,0.0},{130.0,65.0,0.0},{145.0,55.0,-45.0},{150.0,45.0,-90.0},{150.0,35.0,-90.0},{150.0,20.0,-90.0},{150.0,0.0,-90.0},{150.0,0.0,0.0}};
+	float test[17][3] = {{50, 0.0, 0.0},{50.0,0.0,90.0},{50.0,20.0,90.0},{50.0,40.0,90.0},{55.0,50.0,45.0},{65.0,60.0,45.0},{75.0,65.0,20.0},{80.0,65.0,0.0},{90.0,65.0,0.0},{110.0,65.0,0.0},{130.0,65.0,0.0},{145.0,55.0,-45.0},{150.0,45.0,-90.0},{150.0,35.0,-90.0},{150.0,20.0,-90.0},{150.0,0.0,-90.0},{150.0,0.0,0.0}};
 	initState(0,0) = test[0][0]; initState(1,0) = test[0][1]; initState(2,0) = test[0][2];
 	//float *test[3] = {{4.0, 3.0, 3.0}, {4.0, 4.0, 4.0}};
 	//float *test[3] = {{50,0,90},{50,20,90},{50,40,90},{55,50,45},{65,60,45},{75,65,20},{80,65,0},{90,65,0},{110,65,0},{130,65,0},{145,55,-45},{150,45,-90},{150,35,-90},{150,20,-90},{150,0,-90},{150,0,0}};
@@ -163,29 +164,60 @@ void kalmanTest(marioKalman *m) {
 	m->setState(initState);
 	mat temp(3, 1);
 	temp.zeros();
-	for (int i = 0; i < 15; i++) {
+	for (int i = 0; i <= 16; i++) {
 		m->setMeasure(test[i+1][0]+(rand()%20), test[i+1][1]+(rand()%10), test[i+1][2]+(rand()%5));
 		m->predict();
 		m->update();
 		//Her we apply an action to the encoders so (lastState - wantedState) => tells how much to drive
 		temp(0, 0) = test[i+1][0]; temp(1, 0) = test[i+1][1]; temp(2, 0) = test[i+1][2];
-		std::cout << "The " << i << " iteration" << std::endl;
+		/*std::cout << "The " << i << " iteration" << std::endl;
 		std::cout << "Kalmanfilter " << std::endl << m->getState() << std::endl; //state from Kalmanfilter
 		std::cout << "Measure from beacon " << std::endl << m->getMeasures() << std::endl;
 		std::cout << "Wanted path " << std::endl << temp << std::endl;
+		*/	
+		mat K = m->getState();
+		std::cout << "[" << K(0) << ";" << K(1) << ";" << K(2) << "]" << std::endl;
 		m->setState(temp);
 	}
 	mat pos = m->getState();
 
 }
 
+void server() {
+	//Prepare the context and socket
+	zmq::context_t context(1);
+	zmq::socket_t socket(context, ZMQ_REP);
+	socket.bind("tcp://*:5556");
+
+	while(true) {
+		zmq::message_t request;
+		//Wait for next request from client
+		socket.recv(&request);
+		std::cout << "Received Hello" << std::endl;
+
+		//do som thing
+		#ifndef _WIN32
+		sleep(1);
+		#else 
+		Sleep(1)
+		#endif
+
+		//send reply back
+		zmq::message_t reply(5);
+		memcpy ((void *) reply.data(), "World", 5);
+		socket.send(reply);
+	}
+}
+
 int main() {
 	marioKalman *m = new marioKalman();
 	kalmanTest(m);
-	m->initKalman();
-	std::cout << m->getState() << std::endl;
-	m->setMeasure(10, 10, 10);
-	std::cout << m->getMeasures() << std::endl;
+	server();
+
+	//m->initKalman();
+	//std::cout << m->getState() << std::endl;
+	//m->setMeasure(10, 10, 10);
+	//std::cout << m->getMeasures() << std::endl;
 
 	return 0;
 }

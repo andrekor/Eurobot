@@ -3,7 +3,7 @@
 #include <zmq.hpp>
 #include <stdlib.h>
 
-#define TIMESTEP 0.05;
+#define TIMESTEP 0.05; 
 #define N 3
 
 //namespace for armadillo matrix library

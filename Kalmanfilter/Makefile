@@ -2,7 +2,7 @@ OBJS = mario
 CC = g++
 DEBUG = -g
 CFLAGS = -Wall -c $(DEBUG)
-LDLIBS = -larmadillo
+LDLIBS = -larmadillo -lzmq
 RM = rm -f *.o
 SRC = marioKalman.h marioKalman.cpp
 
