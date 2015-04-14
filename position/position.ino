@@ -13,7 +13,7 @@
 #define BQueue 0
 #define CQueue 0
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
-#define MICRO_DELAY 500
+#define MICRO_DELAY 600
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
 #define stepPin 8 //Output pin for the steppermotor
@@ -22,9 +22,9 @@
 
 #define testPin 11
 
-#define VALUE_BEACON_A 338
-#define VALUE_BEACON_B 339
-#define VALUE_BEACON_C 32480
+#define VALUE_BEACON_A 32480 
+#define VALUE_BEACON_B 338
+#define VALUE_BEACON_C 339
 float realAverage(QueueList<float>);
 
 //Setting ip the IR receiver
@@ -40,14 +40,18 @@ int lastAstep = -1; //steps from start to beacon A
 int lastBstep = -1;  //steps from start to beacon B
 int lastCstep = -1; //steps from start to beacon C
 
+int numberAsample = 0;
+int numberBsample = 0;
+int numberCsample = 0;
+
 /*Booleans to check wether we have should zero firstA or not*/
 boolean A = true;
 boolean B = true;
 boolean C = true;
 
 float resolution;
-
-float averageA = 0;
+float
+ averageA = 0;
 float averageB = 0;
 float averageC = 0;
 
@@ -93,7 +97,32 @@ The function, steps, and sets the angle of each of the beacons. The direction is
 void loop() {
 	step();
 	receiveBeaconSignal();
+	//printBeacon();
 }	
+
+void printBeacon() {
+	if (irrecv.decode(&results)) {
+  		int value = results.value; //lagrer IR-koden	
+  		switch (value) {
+  		    case VALUE_BEACON_A:
+  		    	numberAsample++;
+  		      // do something
+  		      break;
+  		    case VALUE_BEACON_B:
+  		      // do something
+  		      numberBsample++;
+  		      break;
+  		    case VALUE_BEACON_C:
+  		    	numberCsample++;
+  		    break;
+  		    default:
+  		      // do something
+  		    break;
+  		}
+  		//Serial.println(value);
+  		irrecv.resume();
+	}
+}
 
 /*Takes in the position, and sends it to serial, so that it can be plotted in a processing program*/
 void livePlot(float x1, float y1) {
@@ -105,7 +134,7 @@ void livePlot(float x1, float y1) {
 
 void printStuff(int first, int average, int last, int num)  {
 	Serial.print("[");
-	Serial.print(first);
+	Serial.print(first);	
 	Serial.print(", ");
 	Serial.print(average);
 	Serial.print("," );
@@ -143,7 +172,23 @@ To make one step with the stepper motor
 void step() {
 	digitalWrite(stepPin, HIGH);
 	digitalWrite(stepPin, LOW);
-	stepCount = (stepCount == 1600 ? 0 : stepCount+1); //Resets after 1 revltion
+	stepCount = (stepCount == 1600 ? 0 : stepCount+1); //Resets after 1 revolution
+	/*if (stepCount == 1600) {
+		stepCount = 0; //resets stepcount after 1 round
+		Serial.print("A samples: ");
+		Serial.println(numberAsample);
+
+		Serial.print("B samples: ");
+		Serial.println(numberBsample);
+
+		Serial.print("C samples: ");
+		Serial.println(numberCsample);
+		numberAsample = 0;
+		numberBsample = 0;
+		numberCsample = 0;
+	} else {
+		stepCount++;
+	}*/
 	delayMicroseconds(MICRO_DELAY);
 }
 
@@ -187,7 +232,7 @@ void setStep(int beacon) {
 			zeroOldestBeacon(2);
 			firstBstep = stepCount;
 		}
-		firstBstep = stepCount;
+		lastBstep = stepCount;
 	} else {
 		if (C) {
 			C = false;
@@ -233,13 +278,33 @@ void zeroOldestBeacon(int beacon) {
 			Serial.print("B: ");
 			Serial.print(firstBstep);
 			Serial.print(", ");
-			Serial.println(lastBstep);;
+			Serial.println(lastBstep);
 			break;
 		default:
 			break;
 	}
-	anglePositive();
+	angleNegative();
 	t->calculate();
+	/*Serial.print("Average A: ");
+	Serial.println(averageA);
+	Serial.print("Average B: ");
+	Serial.println(averageB);
+	Serial.print("Average C: ");
+	Serial.println(averageC);*/
+	/*Position*/
+	/*Serial.print(t->XR);
+	Serial.print(", ");
+	Serial.println(t->YR);*/
+	//The angles between the beacons
+	/*Serial.print("[alpha, beta, gamma]");
+	Serial.print("[");
+	Serial.print(t->alpha);
+	Serial.print(", ");
+	Serial.print(t->beta);
+	Serial.print(", ");
+	Serial.print(t->gamma);
+	Serial.println("]");
+	*/	
 	//IF the tower starts strait forward: takes in position of beacon we have a measure to
 	//should use the beacon that gets correct angles the most
 	//t->robotAngle(0, 100, averageA);
@@ -268,6 +333,27 @@ void anglePositive() {
 		t->gamma = angle(averageB-averageA);
 		t->alpha = angle(averageC-averageB);
 		t->beta = angle(averageA+(oneRevolution-averageC));
+	}
+}
+
+void angleNegative() {
+	if (averageA > averageB && averageA > averageC) {
+		//A er størst, altså konfigurasjon null mellom A og C
+		
+		t->alpha = angle(averageB-averageC);
+		t->gamma = angle(averageA-averageB);
+		t->beta = angle(averageC+oneRevolution-averageA);
+	} else if (averageB > averageC) {
+		//B er størst, altså null konfigurasjon mellom B og A
+		t->beta = angle(averageC-averageA);
+		t->alpha = angle(averageB-averageC);
+		t->gamma = angle(averageA+oneRevolution-averageB);
+		//t->gamma = angle(averageA+(1600-averageB));
+	} else {
+		//C er størst, altså null konfigurasjon mellom C og B
+		t->gamma = angle(averageA-averageB);
+		t->beta = angle(averageC-averageA);
+		t->alpha = angle(averageB+oneRevolution-averageC);
 	}
 }
 

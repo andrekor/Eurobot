@@ -1,6 +1,6 @@
 #include "marioKalman.h"
 
-/*
+/*The Flow of the Kalman filter
 	Predict
 	x = A*state + 
 	P = A*P*A' + Q
@@ -170,11 +170,10 @@ void kalmanTest(marioKalman *m) {
 		m->update();
 		//Her we apply an action to the encoders so (lastState - wantedState) => tells how much to drive
 		temp(0, 0) = test[i+1][0]; temp(1, 0) = test[i+1][1]; temp(2, 0) = test[i+1][2];
-		/*std::cout << "The " << i << " iteration" << std::endl;
+		std::cout << "The " << i << " iteration" << std::endl;
 		std::cout << "Kalmanfilter " << std::endl << m->getState() << std::endl; //state from Kalmanfilter
 		std::cout << "Measure from beacon " << std::endl << m->getMeasures() << std::endl;
 		std::cout << "Wanted path " << std::endl << temp << std::endl;
-		*/	
 		mat K = m->getState();
 		std::cout << "[" << K(0) << ";" << K(1) << ";" << K(2) << "]" << std::endl;
 		m->setState(temp);
@@ -188,6 +187,7 @@ void server() {
 	zmq::context_t context(1);
 	zmq::socket_t socket(context, ZMQ_REP);
 	socket.bind("tcp://*:5555");
+	marioKalman *mario = new marioKalman();
 
 	while(true) {
 		zmq::message_t request;
@@ -197,23 +197,28 @@ void server() {
 		//and calculate the kalman position, before replying with this.
 		std::cout << "Received Hello" << std::endl;
 
-		//do som thing
-		#ifndef _WIN32
 		sleep(1);
-		#else 
-		Sleep(1)
-		#endif
+		//Fetch the position from the client
+		std::string rp1 = std::string(static_cast<char*>(request.data()), request.size());
+		std::cout << rp1 << std::endl;
 
-		//send reply back
-		zmq::message_t reply(5);
-		memcpy ((void *) reply.data(), "World", 5);
+		//Here should we calculate the positio, with rp1, as pos from encoders
+		
+		//convert the position to string to send it
+		std::stringstream ss;
+		mat pos = mario->getState(); //Gets the state
+		ss << pos(0) << "," << pos(1) << "," << pos(2);
+		std::string result = ss.str();
+
+		zmq::message_t reply(result.length());
+		memcpy ((void *) reply.data(), result.c_str(), result.length());
 		socket.send(reply);
 	}
 }
 
 int main() {
-	marioKalman *m = new marioKalman();
-	kalmanTest(m);
+	//marioKalman *m = new marioKalman();
+	//kalmanTest(m);
 	server();
 
 	//m->initKalman();

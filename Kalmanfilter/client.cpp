@@ -1,37 +1,36 @@
 #include <zmq.hpp>
 #include <string>
 #include <iostream>
-#ifndef _WIN32
-#include <unistd.h>
-#else
-#include <windows.h>
-#endif
+#include <sstream>
+#include <vector>
 
-
-
+int xPos = 50;
+int yPos = 50;
 int main() {
+
+	//convert the position to string to send it
+	std::stringstream ss;
+	ss << xPos << "," << yPos;
+	std::string result = ss.str();
+
 	//Prepare the context and socket
 	zmq::context_t context(1);
-	zmq::socket_t socket(context, ZMQ_REP);
-	socket.bind("tcp://*:5555");
+	zmq::socket_t socket(context, ZMQ_REQ);
+	socket.connect("tcp://localhost:5555");
 
-	while(true) {
-		zmq::message_t request;
-		//Wait for next request from client
-		socket.recv(&request);
-		std::cout << "Received Hello" << std::endl;
+	//Make message ready to send
+	//std::vector<char> cvec(result.begin(), std.end());
 
-		//do som thing
-		#ifndef _WIN32
-		sleep(1);
-		#else 
-		Sleep(1)
-		#endif
+	zmq::message_t request(result.length()); //size
+	memcpy((void*) request.data(), result.c_str(), result.length());
+	std::cout << "Sending Hello" << std::endl;
+	socket.send(request);
 
-		//send reply back
-		zmq::message_t reply(5);
-		memcpy ((void *) reply.data(), "World", 5);
-		socket.send(reply);
-	}
+	//Get the reply
+	zmq::message_t reply;
+	socket.recv (&reply);
+
+	std::string rp1 = std::string(static_cast<char*>(reply.data()), reply.size());
+	std::cout << rp1 << std::endl;
 	return 0;
 }
