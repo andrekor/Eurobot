@@ -13,7 +13,7 @@
 #define BQueue 0
 #define CQueue 0
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
-#define MICRO_DELAY 600
+#define MICRO_DELAY 500
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
 #define stepPin 8 //Output pin for the steppermotor
@@ -22,9 +22,9 @@
 
 #define testPin 11
 
-#define VALUE_BEACON_A 32480 
+#define VALUE_BEACON_A 339 
 #define VALUE_BEACON_B 338
-#define VALUE_BEACON_C 339
+#define VALUE_BEACON_C 32480
 float realAverage(QueueList<float>);
 
 //Setting ip the IR receiver
@@ -50,8 +50,7 @@ boolean B = true;
 boolean C = true;
 
 float resolution;
-float
- averageA = 0;
+float averageA = 0;
 float averageB = 0;
 float averageC = 0;
 
@@ -89,6 +88,7 @@ void setup() {
 	resolution = 360.0/oneRevolution;
 	stepCount = 0; 
 	Serial.begin(9600);	
+//	testMethod();
 }
 
 /*Test function for the second prototype, with slipring which allows the tower to 
@@ -98,6 +98,7 @@ void loop() {
 	step();
 	receiveBeaconSignal();
 	//printBeacon();
+	
 }	
 
 void printBeacon() {
@@ -247,56 +248,56 @@ void setStep(int beacon) {
 void zeroOldestBeacon(int beacon) {
 	//Zero the oldest beacon angles
 	switch (beacon) {
-		case 1: //if we see first signal from beacon A, we are allowed to look for B and C beacon. (calculate averagec)
-			C = true;
-			if (firstCstep > lastCstep) 
-				averageC = average_angle(firstCstep, lastCstep);
-			else 
-				averageC = average_angle((oneRevolution-max(firstCstep, lastCstep)), min(firstCstep, lastCstep));
-			Serial.print("C: ");
-			Serial.print(firstCstep);
-			Serial.print(", ");
-			Serial.println(lastCstep);
-			break;
-		case 2: //If we see first signal from beacon B, we are allowed to look for A and C beacon. (calculate averageA)
-			A = true;
-			if (firstAstep > lastAstep)
-				averageA = average_angle((oneRevolution-firstAstep), lastAstep);
-			else 
-				averageA = average_angle(firstAstep, lastAstep);
-			Serial.print("A: ");
-			Serial.print(firstAstep);
-			Serial.print(", ");
-			Serial.println(lastAstep);
-			break;	
-		case 3: //If we see first signal from beacon C, we are allowed to look for A and B beacon. (calculate averageB)
+		case 1: //if we see first signal from beacon A, we are allowed to look for B and C beacon. (calculate averageB)
 			B = true;
 			if (firstBstep > lastBstep)
-				averageB = average_angle((oneRevolution-firstBstep), lastBstep);
+				averageB = ((int)average_angle(firstBstep, oneRevolution + lastBstep))%1600;
 			else 
 				averageB = average_angle(firstBstep, lastBstep);
-			Serial.print("B: ");
+			/*Serial.print("B: ");
 			Serial.print(firstBstep);
 			Serial.print(", ");
-			Serial.println(lastBstep);
+			Serial.println(lastBstep);*/
+			break;
+		case 2: //If we see first signal from beacon B, we are allowed to look for A and C beacon. (calculate averageA)
+			C = true;
+			if (firstCstep > lastCstep) 
+				averageC = ((int)average_angle(firstCstep, lastCstep+oneRevolution))%1600;
+			else 
+				averageC = average_angle(firstCstep, lastCstep);
+			/*Serial.print("C: ");
+			Serial.print(firstCstep);
+			Serial.print(", ");
+			Serial.println(lastCstep);*/
+			break;	
+		case 3: //If we see first signal from beacon C, we are allowed to look for A and B beacon. (calculate averageB)
+			A = true;
+			if (firstAstep > lastAstep)
+				averageA = ((int)average_angle(firstAstep, oneRevolution + lastAstep))%1600;
+			else 
+				averageA = average_angle(firstAstep, lastAstep);
+			/*Serial.print("A: ");
+			Serial.print(firstAstep);
+			Serial.print(", ");
+			Serial.println(lastAstep);*/
 			break;
 		default:
 			break;
 	}
-	angleNegative();
+	anglePositive();
 	t->calculate();
-	/*Serial.print("Average A: ");
+	Serial.print("Average A: ");
 	Serial.println(averageA);
 	Serial.print("Average B: ");
 	Serial.println(averageB);
 	Serial.print("Average C: ");
-	Serial.println(averageC);*/
+	Serial.println(averageC);
 	/*Position*/
-	/*Serial.print(t->XR);
+	Serial.print(t->XR);
 	Serial.print(", ");
-	Serial.println(t->YR);*/
+	Serial.println(t->YR);
 	//The angles between the beacons
-	/*Serial.print("[alpha, beta, gamma]");
+	Serial.print("[alpha, beta, gamma]");
 	Serial.print("[");
 	Serial.print(t->alpha);
 	Serial.print(", ");
@@ -304,7 +305,7 @@ void zeroOldestBeacon(int beacon) {
 	Serial.print(", ");
 	Serial.print(t->gamma);
 	Serial.println("]");
-	*/	
+		
 	//IF the tower starts strait forward: takes in position of beacon we have a measure to
 	//should use the beacon that gets correct angles the most
 	//t->robotAngle(0, 100, averageA);
@@ -383,4 +384,13 @@ void printSteps() {
 	Serial.print(",");
 	Serial.print("C: ");
 	Serial.println(angle(averageC));
+}
+
+void testMethod() {
+	int i = 0;
+	while(i<9600) {
+		step();
+		receiveBeaconSignal();
+		i++;
+	}
 }

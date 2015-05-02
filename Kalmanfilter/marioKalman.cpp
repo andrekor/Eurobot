@@ -182,11 +182,23 @@ void kalmanTest(marioKalman *m) {
 
 }
 
+int getArguments(std::string input, int *pos) {
+	int i = 0; 
+	std::istringstream f(input); 
+	std::string s; 
+	while(getline(f, s, ',')) { 
+		pos[i] = atoi(s.c_str()); 
+		i++; //
+	}
+	return i;
+}
+
+
 void server() {
 	//Prepare the context and socket
 	zmq::context_t context(1);
 	zmq::socket_t socket(context, ZMQ_REP);
-	socket.bind("tcp://*:5555");
+	socket.bind("tcp://*:5900");
 	marioKalman *mario = new marioKalman();
 
 	while(true) {
@@ -195,19 +207,21 @@ void server() {
 		socket.recv(&request);
 		//Her should we receive the position from the encoders
 		//and calculate the kalman position, before replying with this.
-		std::cout << "Received Hello" << std::endl;
+		//std::cout << "Received Hello" << std::endl;
 
 		sleep(1);
 		//Fetch the position from the client
 		std::string rp1 = std::string(static_cast<char*>(request.data()), request.size());
 		std::cout << rp1 << std::endl;
 
+
 		//Here should we calculate the positio, with rp1, as pos from encoders
-		
+
+
 		//convert the position to string to send it
 		std::stringstream ss;
 		mat pos = mario->getState(); //Gets the state
-		ss << pos(0) << "," << pos(1) << "," << pos(2);
+		ss << pos(0) << "," << pos(1) << "," << pos(2) << ",0";
 		std::string result = ss.str();
 
 		zmq::message_t reply(result.length());
@@ -220,9 +234,15 @@ int main() {
 	//marioKalman *m = new marioKalman();
 	//kalmanTest(m);
 	server();
+//int p[3];
+//getArguments("3,2,5", p);
+//
+//	for (int i = 0; i < sizeof(p)/sizeof(*p); i++) {
+		//std::cout << p[i] << std::endl;
+	//}
 
 	//m->initKalman();
-	//std::cout << m->getState() << std::endl;
+	//std::cout << m->getState() << std::endl;/
 	//m->setMeasure(10, 10, 10);
 	//std::cout << m->getMeasures() << std::endl;
 
