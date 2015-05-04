@@ -120,7 +120,6 @@ void printBeacon() {
   		      // do something
   		    break;
   		}
-  		//Serial.println(value);
   		irrecv.resume();
 	}
 }
@@ -286,25 +285,18 @@ void zeroOldestBeacon(int beacon) {
 	}
 	anglePositive();
 	t->calculate();
-	Serial.print("Average A: ");
-	Serial.println(averageA);
-	Serial.print("Average B: ");
-	Serial.println(averageB);
-	Serial.print("Average C: ");
-	Serial.println(averageC);
+	//printAngles();
 	/*Position*/
-	Serial.print(t->XR);
-	Serial.print(", ");
-	Serial.println(t->YR);
+	printPos();
 	//The angles between the beacons
-	Serial.print("[alpha, beta, gamma]");
+	/*Serial.print("[alpha, beta, gamma]");
 	Serial.print("[");
 	Serial.print(t->alpha);
 	Serial.print(", ");
 	Serial.print(t->beta);
 	Serial.print(", ");
 	Serial.print(t->gamma);
-	Serial.println("]");
+	Serial.println("]");*/
 		
 	//IF the tower starts strait forward: takes in position of beacon we have a measure to
 	//should use the beacon that gets correct angles the most
@@ -385,6 +377,19 @@ void printSteps() {
 	Serial.print("C: ");
 	Serial.println(angle(averageC));
 }
+
+/*Method to send the average position to the computer. 
+It turned out that the calculation of the position was a
+bit heavy for the ardduino*/
+/*void sendAverage() {
+	String s1 = String(averageA);
+	String s2 = String(s1+",");
+	String s3 = String(s2+averageB);
+	String s4 = String("," + averageC);
+	String s5 = String(s3+s4);
+	//averageA,averageB,averageC
+	Serial.println(s5);
+}*/
 
 void testMethod() {
 	int i = 0;
