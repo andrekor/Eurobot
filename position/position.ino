@@ -13,7 +13,7 @@
 #define BQueue 0
 #define CQueue 0
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
-#define MICRO_DELAY 500
+#define MICRO_DELAY 350
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
 #define stepPin 8 //Output pin for the steppermotor
@@ -22,9 +22,9 @@
 
 #define testPin 11
 
-#define VALUE_BEACON_A 339 
-#define VALUE_BEACON_B 338
-#define VALUE_BEACON_C 32480
+#define VALUE_BEACON_A 32480
+#define VALUE_BEACON_B 339
+#define VALUE_BEACON_C 338
 float realAverage(QueueList<float>);
 
 //Setting ip the IR receiver
@@ -175,13 +175,13 @@ void step() {
 	stepCount = (stepCount == 1600 ? 0 : stepCount+1); //Resets after 1 revolution
 	/*if (stepCount == 1600) {
 		stepCount = 0; //resets stepcount after 1 round
-		Serial.print("A samples: ");
+		Serial.print("A");
 		Serial.println(numberAsample);
 
-		Serial.print("B samples: ");
+		Serial.print("B");
 		Serial.println(numberBsample);
 
-		Serial.print("C samples: ");
+		Serial.print("C");
 		Serial.println(numberCsample);
 		numberAsample = 0;
 		numberBsample = 0;
@@ -197,6 +197,7 @@ from which beacon the signal comes from*/
 void receiveBeaconSignal() {
   if (irrecv.decode(&results)) {
   	int value = results.value; //lagrer IR-koden
+  	//Serial.println(value);
     switch (value) { //sjekker om vi har et gyldig IR-signal
         case VALUE_BEACON_A:
  			setStep(1);
