@@ -1,18 +1,9 @@
 #include "serial.h"
 
-int main() {
-	Serial *s = new Serial();
-	//Reads each line of the serial
-	while(1){
-		s->readLine();
-	}
-}
-
-
 Serial::Serial() {
 	// Create and open the serial port for communication. 
 	//SerialStream serial; 
-	serial.Open( "/dev/ttyUSB9" );
+	serial.Open( "/dev/ttyUSB0" );
 	// The various available baud rates are defined in SerialStreamBuf class. 
 	//All serial port settings will be placed in
 	// in the SerialPort class.

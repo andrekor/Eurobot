@@ -1,12 +1,12 @@
 CC=gcc-4.8
-CXX=g++ -std=c++0x -Wall
+CXX=g++-4.8 -Wall -std=c++11 -lpthread
 RM=rm -f
-CPPFLAGS=-g
-LDFLAGS=-g 
-LDLIBS=-lserial -lzmq -larmadillo
+CPPFLAGS=-g $(shell root-config --cflags)
+LDFLAGS=-g $(shell root-config --ldflags)
+LDLIBS=$(shell root-config --libs) -lserial -lzmq -larmadillo
 #`sdl-config --libs` -lSDL_mixer
 EXEC=exec
-SRCS=prog.cpp marioKalman.cpp serial.cpp 
+SRCS=main.cpp marioKalman.cpp serial.cpp 
 OBJS=$(subst .cpp,.o,$(SRCS))
 all: $(EXEC)
 
