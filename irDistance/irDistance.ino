@@ -7,10 +7,10 @@ void setup() {
 
 
 void loop() {
-	int val = analogRead(INPUT_PIN);
+/*	int val = analogRead(INPUT_PIN);
 	int result = calculate(val);
 	Serial.print(val);
-	Serial.print(", ");
+	Serial.print(", ");*/
 	/*
 	Serial.print("Voltage(");
 	Serial.print(val);
@@ -18,6 +18,7 @@ void loop() {
 	Serial.print(result);
 	Serial.println("cm.");
 	*/
+	Serial.println(calculate(analogRead(INPUT_PIN)));
 	delay(1000);
 }
 

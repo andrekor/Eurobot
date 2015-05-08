@@ -1,6 +1,7 @@
 #include <SerialStream.h>
 #include <SerialStream.h>
 #include <string>
+#include <stdlib.h>     /* atof */
 #include <sstream>      // std::stringstream
 #include <stdint.h> 	//uint_8t
 #include <iostream>    // std::cout, std::endl
@@ -10,6 +11,7 @@ void closeSerial();
 bool available();
 void readAll();
 void readChar();
+void readLine();
 
 using namespace LibSerial;
 SerialStream serial;
@@ -17,8 +19,8 @@ SerialStream serial;
 int main() {
 	openSerial();
 	while(1) {
-		//readAll();
-		readChar();
+	//	readAll();
+		readLine();
 	}
 	closeSerial();
 }
@@ -27,7 +29,7 @@ int main() {
 void openSerial() {
 	// Create and open the serial port for communication. 
 	//SerialStream serial; 
-	serial.Open( "/dev/ttyUSB3" );
+	serial.Open( "/dev/ttyUSB8" );
 	// The various available baud rates are defined in SerialStreamBuf class. 
 	//All serial port settings will be placed in
 	// in the SerialPort class.
@@ -46,15 +48,37 @@ bool available() {
 	return serial.rdbuf()->in_avail();
 }
 
+void readLine() {
+	uint8_t next_char = 0x00;
+	//std::stringstream ss;
+	std::string s;
+	if (available()) {
+		while(next_char != '\n') {
+			next_char = serial.get();
+			s.push_back(next_char);
+			if (next_char == '\n') {
+				std::cout << "break line" << std::endl;
+				break;
+			}
+		}
+		std::cout << s;
+	}
+
+}
+
 void readChar() {
-	
-	//char next_char ;
 	char next_char;
 	serial.get(next_char);
-	//int data;
+	std::stringstream ss;
+	std::string s;
+	//int data;+
 	//serial >> data;
-	std::cout << next_char;
-	
+	//std::cout << next_char;
+	ss << next_char;
+	s = ss.str();
+	double dist = atof(s.c_str());
+	//double dist2 = std::stod(next_char, 0);
+	std::cout << dist;
 }
 
 void readAll() {

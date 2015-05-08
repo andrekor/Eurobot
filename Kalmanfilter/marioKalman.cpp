@@ -81,7 +81,7 @@ void marioKalman::velocity() {
 	aXv = (state(0,0)-lastState(0,0))/TIMESTEP;
 	aYv = (state(1,0)-lastState(1,0))/TIMESTEP;
 
-	/*OR IF ABSOLUTE VELOCITY*/
+	/*For absolute velocity*/
 	v = ((state(0,0)-lastState(0,0))+(state(1,0)-lastState(1,0)));
 	TIME +=TIMESTEP;
 }
@@ -213,7 +213,6 @@ void server() {
 		//Fetch the position from the client
 		std::string rp1 = std::string(static_cast<char*>(request.data()), request.size());
 		std::cout << rp1 << std::endl;
-
 
 		//Here should we calculate the positio, with rp1, as pos from encoders
 

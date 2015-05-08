@@ -1,4 +1,4 @@
-/*
+	/*
 Max sonar 
 Inputs: TX, PW, AN
 Filters: None, median, highest_mode, lowest_mode, simple, best
@@ -9,15 +9,24 @@ Filters: None, median, highest_mode, lowest_mode, simple, best
 #define txPin 3
 #define rxPin 2
 #define ANALOGPIN 1
+#define INPUT_PIN A5 //analog pin for the IR sensor
 #define PW_PIN 7
 #define PW_SCALE 50 //calculated pulse width scale
 #define AN_SCALE 
 
+#define FULL_STOP 0
+#define SLOW_DOWN 1
+#define DANGER 2
+#define NO_DANGER 3
+
 SoftwareSerial sonarSerial(rxPin, txPin, true); //define serial port for receiving data, output from maxSonar is inverted requiring true to be set
 
+String state[] = {"FULL STOP", "SLOW DOWN", "DANGER", "NO DANGER"};
 double anVolt, inches, cm, pulse;
 int sum = 0;
 int avgRange = 60; //Quantity of values to average
+int prev_state = FULL_STOP;
+int curr_state = FULL_STOP;
 
 void setup() {
 	Serial.begin(9600);
@@ -28,9 +37,13 @@ void setup() {
 //Since the analog readings from maxsonar are very sensitiv
 //it will be more accurate to average n samples
 void loop() {
-	//analog();
+//	analog();
 //	serialRead();
 	pw();
+	//Serial.print("Infrared: ");
+	//Serial.println(calculateIRdistance());
+	delay(500);
+	//opponentDistance();
 }
 
 /*To read from the analog pin*/
@@ -53,7 +66,7 @@ void analog(){
 	Serial.print(cm);
 	Serial.println("cm");*/
 	sum = 0; 
-	//delay(400);
+	delay(200);
 }
 
 /*
@@ -65,9 +78,12 @@ void pw() {
 	//Pulse width representation with a scale factor of 147 us per Inch
 
 	pulse = pulseIn(PW_PIN, HIGH);
-	Serial.println(pulse);
+	//Serial.println(pulse);
 
 	//147us per inch
+	cm = pulse/50;
+//	Serial.println("cm: ");
+	Serial.println(cm);
 	/*inches = pulse/147;
 	cm = inchToCm(inches);
 	Serial.print(inches);
@@ -80,7 +96,6 @@ void pw() {
 double inchToCm(double inch) {
 	return inch*2.54;
 }
-
 
 boolean stringComplete = false;
 
@@ -116,4 +131,38 @@ int EZread() {
 		}
 	}
 	return result;
+}
+
+//IR distance
+double calculateIRdistance() {
+	float x = analogRead(INPUT_PIN);
+	if(x < 78) {
+		return 0;
+	}
+   return  1.6250568241692588e+002 * pow(x,0)
+        + -1.5201470521433809e+000 * pow(x,1)
+        +  6.0156917251002716e-003 * pow(x,2)
+        + -1.0418167954007743e-005 * pow(x,3)
+        +  6.4526747802433565e-009 * pow(x,4);
+}
+
+//In what state the Robot is 
+void opponentDistance() {
+	if (cm < 15) {
+		//Full stop, and calc a new route
+		curr_state = FULL_STOP;
+	} else if (cm < 20) {
+		//Danger area, perhaps think of calculating new rout to avoid opponent
+		curr_state = DANGER;
+	} else if (cm < 40) {
+		//Slow down area
+		curr_state = SLOW_DOWN;
+	} else {
+		//No danger
+		curr_state = NO_DANGER;
+	}
+	if (curr_state != prev_state) {
+		prev_state = curr_state;
+		Serial.println(state[curr_state]);
+	}
 }
