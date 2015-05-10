@@ -1,7 +1,7 @@
 CC=gcc-4.8
-CXX=g++ -std=c++0x -Wall
+CXX=g++ -std=c++0x
 RM=rm -f
-CPPFLAGS=-g
+CPPFLAGS=-g 
 LDFLAGS=-g 
 LDLIBS=-lserial -lzmq -larmadillo
 #`sdl-config --libs` -lSDL_mixer

@@ -2,7 +2,7 @@
 #include <armadillo>
 #include <zmq.hpp>
 #include <stdlib.h>
-#include "serial.h"
+//#include "serial.h"
 
 #define TIMESTEP 0.05; 
 #define N 3
