@@ -3,12 +3,12 @@
 * Author: André Kramer Orten
 *
 * Protocoll for interaction with the server for EurobotUiO 2015 is
-* in       | What                                   |  return value 
+* in             | What                                   |  return value 
 * ------------------------------------------------------------------
-* "1,X,Y"  | Position estimate. (Kalmanfilterd pos) |  X,Y
-* "2"	   | Distance from sone 1	                |  Distance
-* "3"	   | Distance from sone 2                   |  Distance
-* "4"	   | Distance from sone 3                   |  Distance
+* "1,X,Y,theta"  | Position estimate. (Kalmanfilterd pos) |  X,Y,theta
+* "2"	         | Distance from sone 1	                  |  Distance
+* "3"	         | Distance from sone 2                   |  Distance
+* "4"	         | Distance from sone 3                   |  Distance
 * ------------------------------------------------------------------
 *
 * Copyright (c) 2015 André Kramer Orten. All Rights Reserved.
@@ -36,13 +36,14 @@
 #include <sstream>
 #include <vector>
 
-int xPos = 50;
-int yPos = 50;
+double xPos = 50.03;
+double yPos = 60.44;
+double theta = 90.3;
 int main() {
 
 	//convert the position to string to send it
 	std::stringstream ss;
-	ss << "1," << xPos << "," << yPos;
+	ss << "1," << xPos << "," << yPos << "," << theta;
 	std::string result = ss.str();
 
 	//Prepare the context and socket

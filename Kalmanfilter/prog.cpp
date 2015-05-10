@@ -28,21 +28,7 @@
 void readDistance(Prog *p);
 void server(Prog *p);
 std::string handleZMQInput(Prog *p, std::string input);
-
-
-int main() {
-	//opens the serial 
-	Prog *p = new Prog();
-
-	std::thread distance(readDistance, p);
-	std::thread zmq(server, p);
-
-	//joins the threads with the main thread(kills the thread)
-	if (distance.joinable())
-		distance.join();
-	if (zmq.joinable())
-		zmq.join();
-} 
+std::string kalmanPos(std::string);
 
 /*Fetches the serial input. If its valid 
 result it puts it sets the distance*/
@@ -70,19 +56,22 @@ void server(Prog *p) {
 		zmq::message_t request;
 		//Wait for next request from client
 		socket.recv(&request);
-		//Her should we receive the position from the encoders
-		//and calculate the kalman position, before replying with this.
-		//std::cout << "Received Hello" << std::endl;
-
 		usleep(500000); //sleeps for half a second
-		//Fetch the position from the client
+		
+		//Fetch the request from client
 		std::string rp1 = std::string(static_cast<char*>(request.data()), request.size());
 		//std::cout << rp1 << std::endl;
-		char c = rp1[0];
-		std::string result = "Invalid";
+		char c = rp1[0]; //The ID of the request
+		std::string result = "Invalid"; //if no valid ID
 		if (c == '1') {
-			//result = kalmanPos();
-			result = "Kalmanpos";
+			std::string stringPos = rp1.substr(rp1.find(",")+1, rp1.length());
+			/*
+			std::cout << stringPos << std::endl;
+			std::string s1 = stringPos.substr(0, stringPos.find(","));
+			std::string s2 = stringPos.substr(stringPos.find(",")+1, stringPos.length());
+			std::cout << s1 << " - " << s2 << std::endl;
+			*/
+			result = kalmanPos(stringPos);
 		}
 		else if (c == '2') {
 			std::cout << "Reply with distance: " << result << std::endl;
@@ -96,7 +85,6 @@ void server(Prog *p) {
 			result = p->getDistance();//sone 3
 			std::cout << "Reply with distance: " << result << std::endl;
 		}
-		//std::string result = handleZMQInput(p, rp1);
 
 		std::stringstream ss;
 		//std::string result = ss.str();
@@ -108,12 +96,26 @@ void server(Prog *p) {
 
 std::string kalmanPos(std::string position) {
 	marioKalman *mario = new marioKalman(); //Kalmanfilter
-	//mario->setState(); //shpuld set the state
+	mat temp(3, 1); //temp matrice
+	std::string s = position.substr(position.find(",")+1, position.length()); //contains y,theta
+	double x = std::stod(position.substr(0, position.find(","))); 
+    double y = std::stod(s.substr(0, s.find(",")));
+    double theta = std::stod(s.substr(s.find(",")+1, s.length()));
+
+	std::cout << x << ", " << y << ", " << theta << std::endl;
+	temp(0,0) = x;
+	temp(1, 0) = y;
+	temp(1, 0) = theta;
+	//double x = atof(position.substr(0, position.find(",")));
+	//double y = atof(position.substr(position.find(",")+1, position.length()));
+	
+	mario->setState(temp); //Sets the state from encoders
 	mario->predict(); //runs the predict phase
-	mario->update();
+	mario->update(); // runs the update phase
 	mat pos = mario->getState(); //Gets the state
 	std::stringstream ss;
 	ss << pos(0) << "," << pos(1) << "," << pos(2) << ",0";
+	return ss.str();
 }
 
 
@@ -133,15 +135,6 @@ std::string handleZMQInput(Prog *p, std::string input) {
 	return "Invalid";
 }
 
-
-
-/*prints the position every second. Just for testing*/
-void test2(Prog *p) {
-	while(1) {
-		sleep(1);
-		std::cout << "Distanse: " << p->getDistance();
-	}
-}
 
 Prog::~Prog() {}
 
@@ -191,13 +184,17 @@ std::string Prog::getDistance() {
 	return distance1;
 }
 
-void Prog::distance() {
-	while(1) {
-		usleep(10000);
-		std::string a;
-		a = serial->readLine();
-		if (a.length() > 1) {
- 			//std::cout << a << std::endl;
- 			setDistance(a);
- 		}
-	}}
+
+int main() {
+	Prog *p = new Prog();
+
+	//Threads the distance reader and the zmq server
+	std::thread distance(readDistance, p);
+	std::thread zmq(server, p);
+
+	//joins the threads with the main thread(kills the thread)
+	if (distance.joinable())
+		distance.join();
+	if (zmq.joinable())
+		zmq.join();
+} 
