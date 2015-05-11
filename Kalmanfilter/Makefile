@@ -1,5 +1,5 @@
-CC=gcc-4.8
-CXX=g++ -std=c++0x
+CC=gcc
+CXX=g++-4.8 -std=c++11
 RM=rm -f
 CPPFLAGS=-g 
 LDFLAGS=-g 

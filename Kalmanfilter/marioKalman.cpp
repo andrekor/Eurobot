@@ -35,7 +35,7 @@ marioKalman::marioKalman() {
 	K.eye();
 	lastState = state;
 	aXv = 0;
-Kalmanestimate:
+	//Kalmanestimate:
 	aYv = 0;
 }
 
@@ -48,7 +48,7 @@ void marioKalman::initKalman() {
 	float p[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric. Will be updated at later point
 	float h[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric
 	float q[N][N] = {{0.064, 0, 0}, {0, 0.064, 0}, {0, 0, 0.025}};
-	float r[N][N] = {{5, 0, 0}, {0, 5, 0}, {0, 0, 0.5}};
+	float r[N][N] = {{5, 0, 0}, {0, 5, 0}, {0, 0, 5}};//A lot of error for the beacons
 	//std::cout << "a: " << sizeof(a) << " float: " << sizeof(float) << " a[1] " << sizeof(a[1]) << std::endl;
 	for (int i = 0; i < (sizeof(a[1])/sizeof(float)); i++) {
 		for (int j = 0; j < (sizeof(a[1])/sizeof(float)); j++) {

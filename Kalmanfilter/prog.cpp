@@ -25,18 +25,21 @@
 
 #include "prog.h"
 
+#include <time.h>       /* time_t, struct tm, difftime, time, mktime */
+
 void readDistance(Prog *p);
 void server(Prog *p);
 std::string handleZMQInput(Prog *p, std::string input);
-std::string kalmanPos(std::string);
+std::string kalmanPos(std::string, marioKalman *m);
+std::vector<double> split(std::string s, char c);
 
 /*Fetches the serial input. If its valid 
 result it puts it sets the distance*/
 void readDistance(Prog *p) {
 	while(1) {
-		usleep(100000);
+		usleep(50000); 
 		std::string a;
-		a = p->serial->readLine();
+		a = p->serialDistance->readLine();
 		if (a.length() > 1) {
 			std::string d1 = "0"; // temp
 			std::string d2 = "0"; // temp
@@ -82,7 +85,15 @@ void server(Prog *p) {
 		if (c == '1') {
 			int count = (rp1.length()-1)-rp1.find(",");
 			std::string stringPos = rp1.substr(rp1.find(",")+1, count);
-			result = kalmanPos(stringPos);
+			time_t now;
+			time(&now); // same as now = time(NULL)
+			if ((now - p->getTime())< 5) {
+				result = kalmanPos(stringPos, p->mario);
+				//std::cout << "Reply with kalman position " << result << std::endl;
+			} else {
+				result = stringPos;
+				std::cout << "Reply with position " << result << std::endl;
+			}
 		}
 		else if (c == '2') {
 			result = p->getDistanceSone1(); //sone 1
@@ -96,24 +107,22 @@ void server(Prog *p) {
 			std::cout << "Reply with distance: " << result << std::endl;
 			result = p->getDistanceSone3();//sone 3
 		}
-
-		//std::stringstream ss;
-		//std::string result = ss.str();
 		zmq::message_t reply(result.length());
 		memcpy ((void *) reply.data(), result.c_str(), result.length());
 		socket.send(reply);
 	}
 }
 
-std::string kalmanPos(std::string position) {
-	marioKalman *mario = new marioKalman(); //Kalmanfilter
+std::string kalmanPos(std::string position, marioKalman *mario) {
+	//marioKalman *mario = new marioKalman(); //Kalmanfilter
+
 	mat temp(3, 1); //temp matrice
 	std::string s = position.substr(position.find(",")+1, position.length()); //contains y,theta
 	double x = std::stod(position.substr(0, position.find(","))); 
     double y = std::stod(s.substr(0, s.find(",")));
     double theta = std::stod(s.substr(s.find(",")+1, s.length()));
 
-	std::cout << x << ", " << y << ", " << theta << std::endl;
+	//std::cout << x << ", " << y << ", " << theta << std::endl;
 	temp(0,0) = x;
 	temp(1, 0) = y;
 	temp(1, 0) = theta;
@@ -125,7 +134,8 @@ std::string kalmanPos(std::string position) {
 	mario->update(); // runs the update phase
 	mat pos = mario->getState(); //Gets the state
 	std::stringstream ss;
-	ss << pos(0) << "," << pos(1) << "," << pos(2) << ",0";
+	//ss << pos(0);
+	ss << pos(0) << "," << pos(1) << "," << pos(2);
 	return ss.str();
 }
 
@@ -152,10 +162,15 @@ std::string handleZMQInput(Prog *p, std::string input) {
 Prog::~Prog() {}
 
 Prog::Prog() {
-	serial = new Serial("/dev/ttyUSB0"); 
+	serialDistance = new Serial("/dev/ttyUSB1"); //opens the communication to the distance arduino
+	serialBeacon = new Serial("/dev/ttyUSB0");  //opens the communication to the position arduino
 	distance1 = "0";
 	distance2 = "0";
 	distance3 = "0";
+	prevMeasure = "0";
+	time(&timeSincePrevMeasure); //initialize to something high
+	mario = new marioKalman(); //Initialize the kalman filter
+	mario->setMeasure(22.0,100.0,0.0);
 }
 
 /*
@@ -192,17 +207,35 @@ void Prog::server() {
 	}
 }
 */
+
+void Prog::setPrevMeasure(std::string measure) {
+	time_t now;
+	prevMeasure = measure;
+	time(&now);  /* get current time; same as: now = time(NULL)  */
+	std::vector<double> vec = split(measure, ',');
+//	std::cout << "measure: " << measure << " vec size: " << vec.size() <<std::endl;
+	if (vec.size() == 3) {
+		mario->setMeasure(vec[0], vec[1], vec[2]);
+		std::cout << vec[0] << ", " << vec[1] << ", " << vec[2] << std::endl;
+		timeSincePrevMeasure = now;
+	}
+}
+
+time_t Prog::getTime() {
+	return timeSincePrevMeasure;
+}
+
 void Prog::setDistance(std::string dis1, std::string dis2, std::string dis3) {
 	//std::cout << dis1 << "  -  " << dis2 << "  -  " << dis3 << std::endl;
 	distance1 = dis1;
 	distance2 = dis2;
 	distance3 = dis3;
 }
-
+/*
 std::string Prog::getDistance() {
 	return distance1;
 }
-
+*/
 std::string Prog::getDistanceSone1() {
 	return distance1;
 }
@@ -215,16 +248,42 @@ std::string Prog::getDistanceSone3() {
 	return distance3;
 }
 
+std::vector<double> split(std::string input, char c) {
+ 	std::vector<double> args;
+	std::istringstream f(input);
+	std::string s;
+	while(getline(f, s, ',')) {
+		args.push_back(atof(s.c_str()));
+	//	std::cout << s.c_str() << std::endl;
+	}
+	return args;
+}
+
+void beaconPos(Prog *p) {
+	while(1) {
+		usleep(1000); 
+		std::string a;
+		a = p->serialBeacon->readLine(); //reads the line from the Position arduino
+		if (a.length() > 0) {
+			p->setPrevMeasure(a);
+		}
+	}
+}
+
 int main() {
 	Prog *p = new Prog();
 
 	//Threads the distance reader and the zmq server
 	std::thread distance(readDistance, p);
 	std::thread zmq(server, p);
+	std::thread beacon(beaconPos, p);
 
 	//joins the threads with the main thread(kills the thread)
 	if (distance.joinable())
 		distance.join();
 	if (zmq.joinable())
 		zmq.join();
+	if (beacon.joinable()) {
+		beacon.join();
+	}
 } 
