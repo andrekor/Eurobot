@@ -195,10 +195,9 @@ time_t Prog::getTime() {
 	return timeSincePrevMeasure;
 }
 
+/*Sets the distance from the different sones*/
 void Prog::setDistance(std::string dis1, std::string dis2, std::string dis3) {
-#ifdef	DEBUG
-	std::cout << dis1 << "  -  " << dis2 << "  -  " << dis3 << std::endl;
-#endif
+	LOG(std::cout << dis1 << "  -  " << dis2 << "  -  " << dis3 << std::endl);
 	distance1 = dis1;
 	distance2 = dis2;
 	distance3 = dis3;
