@@ -38,8 +38,24 @@ void readDistance(Prog *p) {
 		std::string a;
 		a = p->serial->readLine();
 		if (a.length() > 1) {
+			std::string d1 = "0"; // temp
+			std::string d2 = "0"; // temp
+			std::string d3 = "0"; // temp
+			int count;
+			if (a.find("A") >= 0) {
+				count = (a.find("B")-1)-a.find("A");
+				d1 = a.substr(a.find("A")+1, count); // sone 1
+			}
+			if (a.find("B") > 0) {
+				count = (a.find("C")-1)-a.find("B");
+				d2 = a.substr(a.find("B")+1, count); // sone 2
+			}
+			if (a.find("C") > 0) {
+				count = (a.length()-1)-a.find("C");
+				d3 = a.substr(a.find("C")+1, count); // sone 3
+			}
  			//sets the distance variable in Prog
- 			p->setDistance(a);
+ 			p->setDistance(d1, d2, d3);
  		}
 	}
 }
@@ -60,33 +76,28 @@ void server(Prog *p) {
 		
 		//Fetch the request from client
 		std::string rp1 = std::string(static_cast<char*>(request.data()), request.size());
-		//std::cout << rp1 << std::endl;
+		std::cout << rp1 << std::endl;
 		char c = rp1[0]; //The ID of the request
 		std::string result = "Invalid"; //if no valid ID
 		if (c == '1') {
-			std::string stringPos = rp1.substr(rp1.find(",")+1, rp1.length());
-			/*
-			std::cout << stringPos << std::endl;
-			std::string s1 = stringPos.substr(0, stringPos.find(","));
-			std::string s2 = stringPos.substr(stringPos.find(",")+1, stringPos.length());
-			std::cout << s1 << " - " << s2 << std::endl;
-			*/
+			int count = (rp1.length()-1)-rp1.find(",");
+			std::string stringPos = rp1.substr(rp1.find(",")+1, count);
 			result = kalmanPos(stringPos);
 		}
 		else if (c == '2') {
+			result = p->getDistanceSone1(); //sone 1
 			std::cout << "Reply with distance: " << result << std::endl;
-			result = p->getDistance(); //sone 1
 		}
 		else if (c == '3') {
+			result = p->getDistanceSone2(); //sone 2
 			std::cout << "Reply with distance: " << result << std::endl;
-			result = p->getDistance(); //sone 2
 		}
 		else if (c == '4') {
-			result = p->getDistance();//sone 3
 			std::cout << "Reply with distance: " << result << std::endl;
+			result = p->getDistanceSone3();//sone 3
 		}
 
-		std::stringstream ss;
+		//std::stringstream ss;
 		//std::string result = ss.str();
 		zmq::message_t reply(result.length());
 		memcpy ((void *) reply.data(), result.c_str(), result.length());
@@ -126,12 +137,14 @@ std::string handleZMQInput(Prog *p, std::string input) {
 	c = input[0];
 	if (c == '1')
 		std::cout << "Position from kalmanfilter with the rest of the input" << std::endl;
-	if (c == '2')
-		return p->getDistance();
-	if (c == '3')
-		return p->getDistance(); //Shoudl be sone 2
-	if (c == '4')
-		return p->getDistance(); //shoudl be sone 3
+	else {
+		if (c == '2')
+			return p->getDistanceSone1();
+		if (c == '3')
+			return p->getDistanceSone2(); //Shoudl be sone 2
+		if (c == '4')
+			return p->getDistanceSone3(); //shoudl be sone 3
+	}
 	return "Invalid";
 }
 
@@ -139,10 +152,13 @@ std::string handleZMQInput(Prog *p, std::string input) {
 Prog::~Prog() {}
 
 Prog::Prog() {
-	serial = new Serial("/dev/ttyUSB3"); 
+	serial = new Serial("/dev/ttyUSB0"); 
+	distance1 = "0";
+	distance2 = "0";
+	distance3 = "0";
 }
 
-/**/
+/*
 void Prog::server() {
 	//Prepare the context and socket
 	zmq::context_t context(1);
@@ -175,15 +191,29 @@ void Prog::server() {
 		socket.send(reply);
 	}
 }
-
-void Prog::setDistance(std::string dis) {
-	distance1 = dis;
+*/
+void Prog::setDistance(std::string dis1, std::string dis2, std::string dis3) {
+	//std::cout << dis1 << "  -  " << dis2 << "  -  " << dis3 << std::endl;
+	distance1 = dis1;
+	distance2 = dis2;
+	distance3 = dis3;
 }
 
 std::string Prog::getDistance() {
 	return distance1;
 }
 
+std::string Prog::getDistanceSone1() {
+	return distance1;
+}
+
+std::string Prog::getDistanceSone2() {
+	return distance2;
+}
+
+std::string Prog::getDistanceSone3() {
+	return distance3;
+}
 
 int main() {
 	Prog *p = new Prog();

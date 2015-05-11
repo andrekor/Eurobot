@@ -8,11 +8,14 @@ class Prog {
 		~Prog();
 		void server();
 		void distance();
-		void setDistance(std::string);
+		void setDistance(std::string, std::string, std::string);
 		std::string getDistance();
+		std::string getDistanceSone1();
+		std::string getDistanceSone2();
+		std::string getDistanceSone3();
 		Serial *serial; 	
 	private:
 		std::string distance1; //Mid sensor for enemy detection
-		std::string distance2; //Some other distance sensor
-		std::string distance3; //Some other distance sensor
+		std::string distance2; //In the back
+		std::string distance3; //The lower sensor
 };

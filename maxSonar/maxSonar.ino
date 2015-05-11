@@ -1,16 +1,27 @@
 /*
-Max sonar 
-Inputs: TX, PW, AN
-Filters: None, median, highest_mode, lowest_mode, simple, best
+* File: maxSonar.ino
+* Author: André Kramer Orten
+*
+* Max sonar 
+* Inputs: TX, PW, AN
+* Filters: None, median, highest_mode, lowest_mode, simple, best
+* 
+* IR distance sensor
+* Vo, Vcc, GND
+* Triangulation
 */
 
 #include <SoftwareSerial.h>
 
 #define txPin 3
 #define rxPin 2
-#define ANALOGPIN 1
-#define INPUT_PIN A5 //analog pin for the IR sensor
-#define PW_PIN 7
+#define ANALOGPIN 0 //sa,e as A0
+#define SONE2 A5 //analog pin for the IR sensor (sone 2 - behind robot)
+#define SONE3_1 A4 //analog pin for the IR sensor (sone 3 - lower front)
+#define SONE3_2 A3 //analog pin for the IR sensor (sone 3 - lower front)
+//#define INPUT_PIN A2 //analog pin for the IR sensor (sone 3 - lower front)
+//#define INPUT_PIN A1 //analog pin for the IR sensor
+#define PW_PIN 7 //Detection of the opponent (sone 1 - opponent detection)
 #define PW_SCALE 50 //calculated pulse width scale
 #define AN_SCALE 
 
@@ -39,9 +50,15 @@ void setup() {
 void loop() {
 //	analog();
 //	serialRead();
-	pw();
-	//Serial.print("Infrared: ");
-	//Serial.println(calculateIRdistance());
+	/*Sone 1, opponent detection*/
+	Serial.print("A");
+	Serial.print(pw()); //Opponent detection with Ultrasound
+	/*Sone 2, Sensor behind the robot*/
+	Serial.print("B");
+	Serial.print(calculateIRdistance(SONE2)); //begind robot
+	/*Sone 3, Sensors low in front of the robot*/
+	Serial.print("C");
+	Serial.println("0");
 	delay(500);
 	//opponentDistance();
 }
@@ -59,8 +76,6 @@ void analog(){
 	}
 	inches = sum/avgRange;
 	cm = inches*2.54;
-	//Serial.print("cm: ");
-	//Serial.println(cm);
 	/*Serial.print(inches)
 ;	Serial.print("in, ");
 	Serial.print(cm);
@@ -72,18 +87,19 @@ void analog(){
 /*
 From calculation we have found a scalingfactor on pw/50 per cm. This is for white paper material. 
 */
-void pw() {
+double pw() {
 	pinMode(PW_PIN, INPUT);
 	//USed to read in the pulse that is being sent by the maxSonar device. 
-	//Pulse width representation with a scale factor of 147 us per Inch
+	//Pulse width representation with a scale factor of 147 us per Inch, or 
+	//as measured 50 us per cm
 
 	pulse = pulseIn(PW_PIN, HIGH);
 	//Serial.println(pulse);
 
 	//147us per inch
 	cm = pulse/50;
+	return cm;
 //	Serial.println("cm: ");
-	Serial.println(cm);
 	/*inches = pulse/147;
 	cm = inchToCm(inches);
 	Serial.print(inches);
@@ -134,8 +150,8 @@ int EZread() {
 }
 
 //IR distance
-double calculateIRdistance() {
-	float x = analogRead(INPUT_PIN);
+double calculateIRdistance(int sensor) {
+	float x = analogRead(sensor);
 	if(x < 78) {
 		return 0;
 	}
