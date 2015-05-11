@@ -10,7 +10,6 @@ class Prog {
 		void distance();
 		void setDistance(std::string, std::string, std::string);
 		void setPrevMeasure(std::string);
-		//std::string getDistance();
 		time_t getTime();
 		std::string getDistanceSone1();
 		std::string getDistanceSone2();

@@ -2,7 +2,7 @@ CC=gcc
 CXX=g++-4.8 -std=c++11
 RM=rm -f
 CPPFLAGS=-g 
-LDFLAGS=-g 
+LDFLAGS=-g -Wall -Wextra -pedantic
 LDLIBS=-lserial -lzmq -larmadillo
 #`sdl-config --libs` -lSDL_mixer
 EXEC=exec

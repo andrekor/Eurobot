@@ -50,16 +50,17 @@ void setup() {
 void loop() {
 //	analog();
 //	serialRead();
+	Serial.println("40.4,123.3,83.23");
 	/*Sone 1, opponent detection*/
-	Serial.print("A");
-	Serial.print(pw()); //Opponent detection with Ultrasound
+	//Serial.print("A");
+	//Serial.print(pw()); //Opponent detection with Ultrasound
 	/*Sone 2, Sensor behind the robot*/
-	Serial.print("B");
-	Serial.print(calculateIRdistance(SONE2)); //begind robot
+	//Serial.print("B");
+	//Serial.print(calculateIRdistance(SONE2)); //begind robot
 	/*Sone 3, Sensors low in front of the robot*/
-	Serial.print("C");
-	Serial.println("0");
-	delay(500);
+	//Serial.print("C");
+	//Serial.println("0");
+	delay(200);
 	//opponentDistance();
 }
 
@@ -76,10 +77,6 @@ void analog(){
 	}
 	inches = sum/avgRange;
 	cm = inches*2.54;
-	/*Serial.print(inches)
-;	Serial.print("in, ");
-	Serial.print(cm);
-	Serial.println("cm");*/
 	sum = 0; 
 	delay(200);
 }
@@ -94,19 +91,8 @@ double pw() {
 	//as measured 50 us per cm
 
 	pulse = pulseIn(PW_PIN, HIGH);
-	//Serial.println(pulse);
-
-	//147us per inch
 	cm = pulse/50;
 	return cm;
-//	Serial.println("cm: ");
-	/*inches = pulse/147;
-	cm = inchToCm(inches);
-	Serial.print(inches);
-	Serial.print("in, ");
-	Serial.print(cm);
-	Serial.println("cm");*/
-
 }
 
 double inchToCm(double inch) {
