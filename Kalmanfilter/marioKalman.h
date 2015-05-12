@@ -1,6 +1,7 @@
 #include <iostream>
 #include <armadillo>
 #include <zmq.hpp>
+#include "log.h"
 #include <stdlib.h>
 //#include "serial.h"
 
@@ -47,6 +48,6 @@ class marioKalman {
 		mat P; //covariance matrix
 		mat Q; // calcpos uncertainty matrix (put the error here)
 		mat R; //Measurement uncertainty matrix
-		mat H; //Measurement likelihood matrix
+		mat H; //Measurement transition matrix matrix
 		mat K;//kalman gain
 };

@@ -22,23 +22,9 @@
 * You should have received a copy of the GNU General Public License
 * along with EurobotUiO. If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include "log.h"
 #include "prog.h"
-
-#ifdef DEBUG
-#  define LOG(x) std::cerr << x << std::endl;
-#else
-#  define LOG(x)
-#endif // DEBUG
-
-#include <time.h>       /* time_t, struct tm, difftime, time, mktime */
-#include <csignal>
-
-void readDistance(Prog *p);
-void server(Prog *p);
-std::string handleZMQInput(Prog *p, std::string input);
-std::string kalmanPos(std::string, marioKalman *m);
-std::vector<double> split(std::string s, char c);
+#include "main.h"
 
 /*Fetches the serial input. If its valid 
 result it puts it sets the distance*/
@@ -46,7 +32,6 @@ void readDistance(Prog *p) {
 	while(1) {
 		usleep(50000); 
 		std::string a = p->serialDistance->readLine();
-		LOG("Distance length " << a.length());
 		if (a.length() > 1) {
 			std::string d1 = "0"; // temp
 			std::string d2 = "0"; // temp
@@ -86,7 +71,7 @@ void server(Prog *p) {
 		
 		//Fetch the request from client
 		std::string rp1 = std::string(static_cast<char*>(request.data()), request.size());
-		std::cout << rp1 << std::endl;
+		LOG("New request: " << rp1);	
 		char c = rp1[0]; //The ID of the request
 		std::string result = "-1"; //if no valid ID
 		if (c == '1') {
@@ -98,21 +83,22 @@ void server(Prog *p) {
 				result = kalmanPos(stringPos, p->mario);
 				LOG("Reply with kalman position " << result);
 			} else {
+				/*Need to update the covariance matrix in the kalmanfilter*/
 				result = stringPos;
 				LOG("Reply with position " << result);
 			}
 		}
-		else if (c == '2') {
-			result = p->getDistanceSone1(); //sone 1
-			LOG("Reply with distance: " << result);
-		}
-		else if (c == '3') {
-			result = p->getDistanceSone2(); //sone 2
-			LOG("Reply with distance: " << result);
-		}
-		else if (c == '4') {
-			result = p->getDistanceSone3();//sone 3
-			LOG("Reply with distance: " << result);
+		else {
+			if (c == '2') {
+				result = p->getDistanceSone1(); //sone 1
+			}
+			else if (c == '3') {
+				result = p->getDistanceSone2(); //sone 2
+			}
+			else if (c == '4') {
+				result = p->getDistanceSone3();//sone 3
+			}
+			LOG("[LOG Reply with distance " << result);
 		}
 		zmq::message_t reply(result.length());
 		memcpy ((void *) reply.data(), result.c_str(), result.length());
@@ -222,12 +208,14 @@ void beaconPos(Prog *p) {
 }
 
 int main() {
-	LOG("Starts the program");
 	Prog *p = new Prog();
 
 	//Threads the distance reader, the zmq server and beacon position
+	LOG("Starts the distance thread");
 	std::thread distance(readDistance, p);
+	LOG("Starts the server thread");
 	std::thread zmq(server, p);
+	LOG("Starts beacon position thread");
 	std::thread beacon(beaconPos, p);
 
 	//Joins the threads with the main thread(kills the thread)

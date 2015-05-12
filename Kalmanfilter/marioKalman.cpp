@@ -37,18 +37,20 @@ marioKalman::marioKalman() {
 	aXv = 0;
 	//Kalmanestimate:
 	aYv = 0;
+	initKalman(); //initialize the different values
 }
 
 /*Should initialize the state matrix and covariance matrix*/
 void marioKalman::initKalman() {
+	LOG("Initializing Kalmanfilter \n");
 	lastState = state;
 	aXv = 0;
 	aYv=0;
 	float a[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric
 	float p[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric. Will be updated at later point
 	float h[N][N] = {{1,0,0},{0,1,0},{0,0,1}}; //Identity matric
-	float q[N][N] = {{0.064, 0, 0}, {0, 0.064, 0}, {0, 0, 0.025}};
-	float r[N][N] = {{5, 0, 0}, {0, 5, 0}, {0, 0, 5}};//A lot of error for the beacons
+	float q[N][N] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+	float r[N][N] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};//A lot of error for the beacons
 	//std::cout << "a: " << sizeof(a) << " float: " << sizeof(float) << " a[1] " << sizeof(a[1]) << std::endl;
 	for (int i = 0; i < (sizeof(a[1])/sizeof(float)); i++) {
 		for (int j = 0; j < (sizeof(a[1])/sizeof(float)); j++) {
@@ -58,15 +60,16 @@ void marioKalman::initKalman() {
 			//A(i, j) = a[i][j];
 		}
 	}
+	LOG("Measurement transition matrix \n " << H);
+	LOG("Q - system noise \n " << Q);
+	LOG("R - beacon noise \n " << R);
+	LOG("P - covariance matrix \n " << P);
 }
 
 void marioKalman::predict() {
-	//std::cout << "Predict part: " << std::endl;
 	lastState = state;
 	x = A*lastState; //+B*action; //prediction of the position
-//	std::cout << A << " * " << lastState << std::endl;
 	P = A*P*A.t()+Q; //Q-is the noise
-	//std::cout << P << " + " << Q << " (noise)" << std::endl;
 }
 
 void marioKalman::update() {
@@ -74,6 +77,7 @@ void marioKalman::update() {
  	//Z should be updated each time calculating (use setMeasure)
  	state = x + K*(Z-H*lastState); //Z-H*lastState describe the error between measure, and prev position
  	P = (eye(3,3)-K*H)*P; //update the P matrix
+ 	LOG("Kalman gain \n" << K);
 }
 
 //Calculate velocity from position. Velocity in X and Y
