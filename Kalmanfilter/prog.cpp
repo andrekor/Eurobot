@@ -26,7 +26,7 @@
 #include "prog.h"
 
 #ifdef DEBUG
-#  define LOG(x) x
+#  define LOG(x) std::cerr << x << std::endl;
 #else
 #  define LOG(x)
 #endif // DEBUG
@@ -45,8 +45,8 @@ result it puts it sets the distance*/
 void readDistance(Prog *p) {
 	while(1) {
 		usleep(50000); 
-		std::string a;
-		a = p->serialDistance->readLine();
+		std::string a = p->serialDistance->readLine();
+		LOG("Distance length " << a.length());
 		if (a.length() > 1) {
 			std::string d1 = "0"; // temp
 			std::string d2 = "0"; // temp
@@ -96,23 +96,23 @@ void server(Prog *p) {
 			time(&now); // same as now = time(NULL)
 			if ((now - p->getTime())< 5) {
 				result = kalmanPos(stringPos, p->mario);
-				LOG(std::cout << "Reply with kalman position " << result << std::endl);
+				LOG("Reply with kalman position " << result);
 			} else {
 				result = stringPos;
-				LOG(std::cout << "Reply with position " << result << std::endl);
+				LOG("Reply with position " << result);
 			}
 		}
 		else if (c == '2') {
 			result = p->getDistanceSone1(); //sone 1
-			LOG(std::cout << "Reply with distance: " << result << std::endl);
+			LOG("Reply with distance: " << result);
 		}
 		else if (c == '3') {
 			result = p->getDistanceSone2(); //sone 2
-			LOG(std::cout << "Reply with distance: " << result << std::endl);
+			LOG("Reply with distance: " << result);
 		}
 		else if (c == '4') {
 			result = p->getDistanceSone3();//sone 3
-			LOG(std::cout << "Reply with distance: " << result << std::endl);
+			LOG("Reply with distance: " << result);
 		}
 		zmq::message_t reply(result.length());
 		memcpy ((void *) reply.data(), result.c_str(), result.length());
@@ -140,35 +140,15 @@ std::string kalmanPos(std::string position, marioKalman *mario) {
 	return ss.str();
 }
 
-
-/*Not sure if i should use this function, or just do it inside the server function*/
-std::string handleZMQInput(Prog *p, std::string input) {
-	std::cout << "Request: " << input << std::endl;
-	char c;
-	c = input[0];
-	if (c == '1')
-		std::cout << "Position from kalmanfilter with the rest of the input" << std::endl;
-	else {
-		if (c == '2')
-			return p->getDistanceSone1();
-		if (c == '3')
-			return p->getDistanceSone2(); //Shoudl be sone 2
-		if (c == '4')
-			return p->getDistanceSone3(); //shoudl be sone 3
-	}
-	return "Invalid";
-}
-
-
 Prog::~Prog() {}
 
 Prog::Prog() {
 	std::string sd = "/dev/ttyUSB1"; //Serial port to distance arduino
 	std::string sp = "/dev/ttyUSB0"; //Serial port to position arduino
 	serialDistance = new Serial(sd); //opens the communication to the distance arduino
-	LOG(std::cout << "Opening serial Distance on" << sd << std::endl);
+	LOG("Opening serial Distance on" << sd);
 	serialBeacon = new Serial(sp);  //opens the communication to the position arduino
-	LOG(std::cout << "Opening serial Position on" << sp << std::endl);
+	LOG("Opening serial Position on" << sp);
 	distance1 = "0";
 	distance2 = "0";
 	distance3 = "0";
@@ -187,7 +167,7 @@ void Prog::setPrevMeasure(std::string measure) {
 	if (vec.size() == 3) {
 		mario->setMeasure(vec[0], vec[1], vec[2]);
 		timeSincePrevMeasure = now;
-		LOG(std::cout << "Sets the measure vector in kalman filter " <<  vec[0] << ", " << vec[1] << ", " << vec[2] << std::endl);
+		LOG("Sets the measure vector in kalman filter " <<  vec[0] << ", " << vec[1] << ", " << vec[2]);
 	}
 }
 
@@ -197,7 +177,7 @@ time_t Prog::getTime() {
 
 /*Sets the distance from the different sones*/
 void Prog::setDistance(std::string dis1, std::string dis2, std::string dis3) {
-	LOG(std::cout << dis1 << "  -  " << dis2 << "  -  " << dis3 << std::endl);
+	LOG(dis1 << "  -  " << dis2 << "  -  " << dis3);
 	distance1 = dis1;
 	distance2 = dis2;
 	distance3 = dis3;
@@ -229,12 +209,13 @@ std::vector<double> split(std::string input, char c) {
 	return args;
 }
 
+/*Reads the input from the beacon tower, and saves the state. 
+Perhaps this also is where the calculation should occure*/
 void beaconPos(Prog *p) {
 	while(1) {
 		usleep(1000); 
-		std::string a;
-		a = p->serialBeacon->readLine(); //reads the line from the Position arduino
-		if (a.length() > 0) {
+		std::string a = p->serialBeacon->readLine(); //reads the line from the Position arduino
+		if (a.length() > 1) {
 			p->setPrevMeasure(a);
 		}
 	}
@@ -254,7 +235,6 @@ int main() {
 		distance.join();
 	if (zmq.joinable())
 		zmq.join();
-	if (beacon.joinable()) {
+	if (beacon.joinable()) 
 		beacon.join();
-	}
 } 

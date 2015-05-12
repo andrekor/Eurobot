@@ -66,10 +66,12 @@ Reads one line, and
 std::string Serial::readLine() {
 	uint8_t next_char = 0x00;
 	//std::stringstream ss;
-	std::string s;
+	std::string s = "";
 	if (available()) {
 		while(next_char != '\n') {
 			next_char = serial.get();
+			if (next_char == 255)
+				return "";
 			s.push_back(next_char);
 			if (next_char == '\n') {
 				//std::cout << "break line" << std::endl;

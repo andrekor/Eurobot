@@ -50,7 +50,7 @@ int main() {
 	zmq::context_t context(1);
 	zmq::socket_t socket(context, ZMQ_REQ);
 	socket.connect("tcp://localhost:5900");
-
+	
 	//Make message ready to send
 	//std::vector<char> cvec(result.begin(), std.end());
 
