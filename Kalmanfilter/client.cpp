@@ -43,7 +43,7 @@ int main() {
 
 	//convert the position to string to send it
 	std::stringstream ss;
-	ss << "1," << xPos << "," << yPos << "," << theta;
+	ss << "2," << xPos << "," << yPos << "," << theta;
 	std::string result = ss.str();
 
 	//Prepare the context and socket

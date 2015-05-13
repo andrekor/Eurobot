@@ -88,17 +88,9 @@ void server(Prog *p) {
 				LOG("Reply with position " << result);
 			}
 		}
-		else {
-			if (c == '2') {
-				result = p->getDistanceSone1(); //sone 1
-			}
-			else if (c == '3') {
-				result = p->getDistanceSone2(); //sone 2
-			}
-			else if (c == '4') {
-				result = p->getDistanceSone3();//sone 3
-			}
-			LOG("[LOG Reply with distance " << result);
+		else if (c == '2') {
+			result = p->getDistance();
+			LOG("Reply with distance " << result);
 		}
 		zmq::message_t reply(result.length());
 		memcpy ((void *) reply.data(), result.c_str(), result.length());
@@ -167,6 +159,12 @@ void Prog::setDistance(std::string dis1, std::string dis2, std::string dis3) {
 	distance1 = dis1;
 	distance2 = dis2;
 	distance3 = dis3;
+}
+
+std::string Prog::getDistance() {
+	std::stringstream ss;
+	ss << distance1 << "," << distance2 << "," << distance3;
+	return ss.str();
 }
 
 std::string Prog::getDistanceSone1() {

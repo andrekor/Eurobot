@@ -50,15 +50,15 @@ void setup() {
 void loop() {
 //	analog();
 //	serialRead();
-	Serial.println("40.4,123.3,83.23");
+	//Serial.println("40.4,123.3,83.23");
 	/*Sone 1, opponent detection*/
-	//Serial.print("A");
+//	Serial.print("A");
 	//Serial.print(pw()); //Opponent detection with Ultrasound
 	/*Sone 2, Sensor behind the robot*/
-	//Serial.print("B");
-	//Serial.print(calculateIRdistance(SONE2)); //begind robot
+	Serial.print("B");
+	Serial.println(calculateIRdistance(SONE2)); //begind robot
 	/*Sone 3, Sensors low in front of the robot*/
-	//Serial.print("C");
+//	Serial.print("C");
 	//Serial.println("0");
 	delay(200);
 	//opponentDistance();

@@ -14,6 +14,7 @@ class Prog {
 		std::string getDistanceSone1();
 		std::string getDistanceSone2();
 		std::string getDistanceSone3();
+		std::string getDistance();
 		Serial *serialDistance; 	
 		Serial *serialBeacon;
 		marioKalman *mario;
