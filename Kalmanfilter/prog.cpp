@@ -55,11 +55,26 @@ void readDistance(Prog *p) {
 	}
 }
 
+/*
+Splits the input string on c, and returns the 
+values as double in a double vector
+*/
+std::vector<double> split(std::string input, char c) {
+ 	std::vector<double> args;
+	std::istringstream f(input);
+	std::string s;
+	while(getline(f, s, ',')) {
+		args.push_back(atof(s.c_str()));
+	}
+	return args;
+}
+
 /*Depending on the request, the server
 should respond with either the position, 
 or the distances from the distance sensors*/
 void server(Prog *p) {
-	//Prepare the context and socket
+	//Prepare the context and socketudo netstat -taupen
+
 	zmq::context_t context(1);
 	zmq::socket_t socket(context, ZMQ_REP);
 	socket.bind("tcp://*:5900");
@@ -67,8 +82,7 @@ void server(Prog *p) {
 		zmq::message_t request;
 		//Wait for next request from client
 		socket.recv(&request);
-		usleep(500000); //sleeps for half a second
-		
+		usleep(500000); //sleeps for half a second sleep(1);
 		//Fetch the request from client
 		std::string rp1 = std::string(static_cast<char*>(request.data()), request.size());
 		LOG("New request: " << rp1);	
@@ -121,8 +135,8 @@ std::string kalmanPos(std::string position, marioKalman *mario) {
 Prog::~Prog() {}
 
 Prog::Prog() {
-	std::string sd = "/dev/ttyUSB1"; //Serial port to distance arduino
-	std::string sp = "/dev/ttyUSB0"; //Serial port to position arduino
+	std::string sd = "/dev/ttyUSB0"; //Serial port to distance arduino
+	std::string sp = "/dev/ttyUSB2"; //Serial port to position arduino
 	serialDistance = new Serial(sd); //opens the communication to the distance arduino
 	LOG("Opening serial Distance on" << sd);
 	serialBeacon = new Serial(sp);  //opens the communication to the position arduino
@@ -133,7 +147,7 @@ Prog::Prog() {
 	prevMeasure = "0";
 	time(&timeSincePrevMeasure); //initialize to something high
 	mario = new marioKalman(); //Initialize the kalman filter
-	mario->setMeasure(22.0,100.0,0.0);
+	mario->setMeasure(22.0,100.0,0.0); //start position
 }
 
 
@@ -177,20 +191,6 @@ std::string Prog::getDistanceSone2() {
 
 std::string Prog::getDistanceSone3() {
 	return distance3;
-}
-
-/*
-Splits the input string on c, and returns the 
-values as double in a double vector
-*/
-std::vector<double> split(std::string input, char c) {
- 	std::vector<double> args;
-	std::istringstream f(input);
-	std::string s;
-	while(getline(f, s, ',')) {
-		args.push_back(atof(s.c_str()));
-	}
-	return args;
 }
 
 /*Reads the input from the beacon tower, and saves the state. 

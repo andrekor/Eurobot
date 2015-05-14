@@ -13,7 +13,7 @@
 #define BQueue 0
 #define CQueue 0
 #define oneRevolution 1600 //Muligens må endre dette. Fra instructables.com ....
-#define MICRO_DELAY 350
+#define MICRO_DELAY 600
 
 #define dirPin 7 //the pin that co32480ntrols the direction of the steppermotor
 #define stepPin 8 //Output pin for the steppermotor
@@ -22,9 +22,9 @@
 
 #define testPin 11
 
-#define VALUE_BEACON_A 32480
+#define VALUE_BEACON_A 338
 #define VALUE_BEACON_B 339
-#define VALUE_BEACON_C 338
+#define VALUE_BEACON_C 32480
 float realAverage(QueueList<float>);
 
 //Setting ip the IR receiver
@@ -285,10 +285,19 @@ void zeroOldestBeacon(int beacon) {
 			break;
 	}
 	anglePositive();
+	// forrige X/Y målinger
+	float tempX = t->XR;
+	float tempY = t->YR;
 	t->calculate();
-	//printAngles();
+	//printAngles(); /Debug print
 	/*Position*/
-	printPos();
+	//Could tweek this parameter
+	if ((abs(tempX - t->XR) < 100) && (abs(tempY - t->YR) < 75)) {
+		printPos();
+	} else {//tilbakestiller ugyldig resultater
+		t->XR = tempX;
+		t->YR = tempY;
+	}
 	//The angles between the beacons
 	/*Serial.print("[alpha, beta, gamma]");
 	Serial.print("[");
@@ -355,9 +364,13 @@ float angle(int steps) {
 	return (steps*resolution);
 }
 void printPos() {
-	Serial.print(t->XR);
-	Serial.print(", ");
-	Serial.println(t->YR);
+	if ((t->XR > 0) && (t->XR < 300) && (t->YR > 0) && (t->YR < 200)) {
+
+		Serial.print(t->XR);
+		Serial.print(", ");
+		Serial.print(t->YR);
+		Serial.println(",0");
+	}
 }
 
 void printAngles() {

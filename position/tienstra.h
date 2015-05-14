@@ -59,4 +59,6 @@ public:
  	float cot_alpha;
  	float cot_beta;
  	float cot_gamma;
+
+ 	float heading;
 };

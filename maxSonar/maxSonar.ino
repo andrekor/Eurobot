@@ -52,15 +52,15 @@ void loop() {
 //	serialRead();
 	//Serial.println("40.4,123.3,83.23");
 	/*Sone 1, opponent detection*/
-//	Serial.print("A");
-	//Serial.print(pw()); //Opponent detection with Ultrasound
+	Serial.print("A");
+	Serial.print(pw()); //Opponent detection with Ultrasound
 	/*Sone 2, Sensor behind the robot*/
 	Serial.print("B");
-	Serial.println(calculateIRdistance(SONE2)); //begind robot
+	Serial.print(calculateIRdistance(SONE2)); //begind robot
 	/*Sone 3, Sensors low in front of the robot*/
-//	Serial.print("C");
-	//Serial.println("0");
-	delay(200);
+	Serial.print("C");
+	Serial.println(calculateIRdistance(SONE3_1));
+	delay(200);	
 	//opponentDistance();
 }
 
@@ -111,6 +111,7 @@ void serialRead() {
 	}
 }
 
+/*Read distance serial*/
 int EZread() {
 	int result; 
 	char inData[4]; 	//read data in to char array

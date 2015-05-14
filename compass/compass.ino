@@ -48,9 +48,9 @@ void loop() {
 		first = false;
 	}
 
-	/*Serial.print("Y0: ");
-	Serial.print(y0);
-	Serial.print(", X");
+	//Serial.print("Y0 ");
+	/*Serial.print(y);
+	Serial.print(",");
 	Serial.println(x);*/
 	//Print
 	//Serial.print(x);

@@ -2,9 +2,9 @@
 
 Tienstra::Tienstra() {
     //position off Robot
-   XR = 0;
-   YR = 0;
-   theta = 0;
+   XR = 0; // burde initialiseres til start posisjon
+   YR = 0; // burde initialiseres til start posisjon
+   theta = 0; // burde initialiseres til start posisjon
 
    //Different vectors
    AB = 0;
@@ -114,7 +114,7 @@ void Tienstra::calculate() {
 Takes in the position of the robot, the position of the beacon, and the angle of the beacon
 Returns the angle of the robot. 
 */
-float robotAngle(float yi, float xi, float thetai) {
-  // return atan2(yi-YR, xi-XR) - thetai;
-   return 0;
+float Tienstra::robotAngle(float yi, float xi, float thetai) {
+   return atan2(yi-YR, xi-XR) - thetai;
+  // return 0;
 }

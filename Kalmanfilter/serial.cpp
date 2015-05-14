@@ -76,7 +76,7 @@ std::string Serial::readLine() {
 			if (next_char == '\n') {
 				//std::cout << "break line" << std::endl;
 				break;
-			}
+			}//push back after break to get rid of \n
 		}
 		//std::cout << s;
 	}

@@ -43,13 +43,13 @@ int main() {
 
 	//convert the position to string to send it
 	std::stringstream ss;
-	ss << "2," << xPos << "," << yPos << "," << theta;
+	ss << "1," << xPos << "," << yPos << "," << theta;
 	std::string result = ss.str();
 
 	//Prepare the context and socket
 	zmq::context_t context(1);
 	zmq::socket_t socket(context, ZMQ_REQ);
-	socket.connect("tcp://localhost:5900");
+	socket.connect("tcp://localhost:5500");
 	
 	//Make message ready to send
 	//std::vector<char> cvec(result.begin(), std.end());
